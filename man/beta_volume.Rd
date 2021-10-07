@@ -4,7 +4,7 @@
 \alias{beta_volume}
 \title{Load a Matrix corresponds to metacommunity composition}
 \usage{
-beta_volume(meta_composition, weights = T)
+beta_volume(meta_composition, weights = T, method, dim_threshold = 10)
 }
 \arguments{
 \item{meta_composition}{metacommunity composition}
