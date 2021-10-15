@@ -26,17 +26,17 @@ beta_volume <- function(meta_composition, weights = T, method, dim_threshold = 1
 
   estiamte_volume <- function(meta_composition, method, dimension){
     if(method == 'deterministic'){
-      tryCatch(
+      hypervolume <-tryCatch(
         {
-          hypervolume <- convhulln(meta_composition, output.options = TRUE)$vol
+           P *(convhulln(meta_composition, output.options = TRUE)$vol)^(1 / P)
         },
         error = function(e) {
-          hypervolume <- 0
+           0
         }
       )
     }
     if(method == 'hyper_normal'){
-      hypervolume <- MVNH_det(meta_composition)[1]/max_MVHH_det[dimension]
+      hypervolume <- P*(MVNH_det(meta_composition)[1])^(1/P)*4
     }
     hypervolume
   }
@@ -45,9 +45,7 @@ beta_volume <- function(meta_composition, weights = T, method, dim_threshold = 1
      method <- ifelse(P > dim_threshold, 'hyper_normal', 'deterministic')
   }
 
-  hypervolume <- estiamte_volume(meta_composition, method, dimension = P)
-
-  P * (hypervolume)^(1 / P)
+  estiamte_volume(meta_composition, method, dimension = P)
 }
 
 #' @export
@@ -68,24 +66,24 @@ weight_composition <- function(meta_composition) {
   meta_composition
 }
 
-#' @export
-calcualte_max_MVHH_det <- function(P){
-  # matrix(rep(c(1,0), P), ncol = P) %>%
-  #   split(rep(1:ncol(.), each = nrow(.))) %>%
-  #   cross() %>%
-  #   map(unlist) %>%
-  #   bind_rows() %>%
-  #   rbind(rep(0, P)) %>%
-  #   MVNH_det() %>%
-  #   first()
-
-  expand_grid(
-    a = 0:1,
-    b = 0:1
-  ) %>%
-    {.[rep(seq_len(nrow(.)), each = 2^P/4), ]} %>%
-    cov()
-}
+#'
+#' calcualte_max_MVHH_det <- function(P){
+#'   # matrix(rep(c(1,0), P), ncol = P) %>%
+#'   #   split(rep(1:ncol(.), each = nrow(.))) %>%
+#'   #   cross() %>%
+#'   #   map(unlist) %>%
+#'   #   bind_rows() %>%
+#'   #   rbind(rep(0, P)) %>%
+#'   #   MVNH_det() %>%
+#'   #   first()
+#'
+#'   expand_grid(
+#'     a = 0:1,
+#'     b = 0:1
+#'   ) %>%
+#'     {.[rep(seq_len(nrow(.)), each = 2^P/4), ]} %>%
+#'     cov()
+#' }
 
 # max_beta <- function(P) {
 #   matrix(rep(c(1, 0), P), ncol = P) %>%
@@ -117,4 +115,4 @@ calcualte_max_MVHH_det <- function(P){
 #     future_map_dbl(calcualte_max_MVHH_det, .progress = T)
 # max_MVHH_det <- 1:100 %>%
 #   purrr::map_dbl(~MVNH_det(cov = diag(1/4, .), cov.matrix=TRUE)[1])
-# usethis::use_data(max_MVHH_det)
+# usethis::use_data(max_MVHH_det, overwrite = TRUE)
