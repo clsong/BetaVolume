@@ -36,7 +36,7 @@ betavolume <- function(meta_composition,
       hypervolume_raw <- eigen(cov(meta_composition), only.values = T)$values %>%
         log() %>%
         {
-          sum(.data) / length(.data)
+          sum(.) / length(.)
         } %>%
         exp()
 
