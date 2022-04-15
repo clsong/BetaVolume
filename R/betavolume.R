@@ -20,13 +20,11 @@ betavolume <- function(meta_composition,
   weight_composition <- function(meta_composition) {
     meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
     weight <- meta_composition %>%
-      {
-        suppressMessages(as_tibble(.data, .name_repair = "unique"))
-      } %>%
+      as_tibble(.name_repair = "unique") %>%
       group_by(across()) %>%
       mutate(n = n()) %>%
       ungroup() %>%
-      mutate(n = nrow(.data) * n / sum(n)) %>%
+      mutate(n = nrow(meta_composition) * n / sum(n)) %>%
       pull(n)
     for (i in 1:nrow(meta_composition)) {
       meta_composition[i, ] <- weight[i] * meta_composition[i, ]
