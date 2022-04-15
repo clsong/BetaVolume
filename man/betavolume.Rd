@@ -20,6 +20,8 @@ betavolume(
 \item{hypervolume_method}{which method to estimate the hypervolume}
 
 \item{dim_threshold}{the threshold of which default hypervolume_method is used}
+
+\item{remove_unique}{whether unique compositions should be removed}
 }
 \value{
 the value of the geometric measure of beta_diversity

@@ -17,21 +17,6 @@ betavolume <- function(meta_composition,
                        hypervolume_method,
                        dim_threshold = 10,
                        remove_unique = F) {
-  weight_composition <- function(meta_composition) {
-    meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
-    weight <- meta_composition %>%
-      as_tibble(.name_repair = "unique") %>%
-      group_by(across()) %>%
-      mutate(n = n()) %>%
-      ungroup() %>%
-      mutate(n = nrow(meta_composition) * n / sum(n)) %>%
-      pull(n)
-    for (i in 1:nrow(meta_composition)) {
-      meta_composition[i, ] <- weight[i] * meta_composition[i, ]
-    }
-    meta_composition
-  }
-
   estiamte_volume <- function(meta_composition, hypervolume_method, dimension) {
     if (hypervolume_method == "deterministic") {
       hypervolume <- tryCatch(
@@ -56,17 +41,11 @@ betavolume <- function(meta_composition,
     hypervolume
   }
 
-  if(remove_unique){
-    meta_composition <- unique(meta_composition, MARGIN = 1)
-    meta_composition <- unique(meta_composition, MARGIN = 2)
-  }
-
-  if (nrow(meta_composition) < ncol(meta_composition)) {
-    meta_composition <- t(meta_composition)
-  }
+  meta_composition <- process_meta_composition(meta_composition,
+                                               weights,
+                                               remove_unique)
 
   d <- ncol(meta_composition)
-  if (weights) meta_composition <- weight_composition(meta_composition)
 
   if (missing(hypervolume_method)) {
     hypervolume_method <- ifelse(d > dim_threshold, "hyper_normal", "deterministic")

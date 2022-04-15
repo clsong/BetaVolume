@@ -2,6 +2,8 @@
 
 export("%>%")
 export(betavolume)
+export(disentangle_patch_contribution)
+export(process_meta_composition)
 import(dplyr)
 import(geometry)
 import(rlang)
