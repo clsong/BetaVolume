@@ -7,18 +7,14 @@
 #'
 #' @param meta_composition metacommunity composition
 #' @param weights whether non-unique compositions should be weighted
-#' @param method which method to use to compute the hypervolume
+#' @param hypervolume_method which method to estimate the hypervolume
 #' @param dim_threshold the threshold of which default method is used
-#'
-#' @importFrom geometry convhulln
-#' @importFrom stats cov
-#' @importFrom tibble as_tibble
 #'
 #' @return the value of the geometric measure of beta_diversity
 #' @export
-beta_volume <- function(meta_composition,
+betavolume <- function(meta_composition,
                         weights = T,
-                        method,
+                        hypervolume_method,
                         dim_threshold = 10) {
   if (nrow(meta_composition) < ncol(meta_composition)) {
     meta_composition <- t(meta_composition)
@@ -52,7 +48,7 @@ beta_volume <- function(meta_composition,
 
       hypervolume_raw <- eigen(cov(meta_composition), only.values= T)$values %>%
         log() %>%
-        {sum(.)/length(.)} %>%
+        {sum(.data)/length(.data)} %>%
         exp()
 
       hypervolume <- P * hypervolume_raw * 4
@@ -67,6 +63,16 @@ beta_volume <- function(meta_composition,
   estiamte_volume(meta_composition, method, dimension = P)
 }
 
+#' Weight a metacommunity matrix according to the duplication scheme
+#'
+#' @param meta_composition metacommunity composition
+#'
+#' @importFrom dplyr group_by
+#' @importFrom stats cov
+#' @importFrom tibble as_tibble
+#' @importFrom rlang .data
+#'
+#' @return the value of the geometric measure of beta_diversity
 #' @export
 weight_composition <- function(meta_composition) {
   meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]

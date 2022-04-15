@@ -14,8 +14,9 @@ Imports:
    magrittr,
    dplyr,
    tidyr,
-   purrr,
    geometry,
-   tibble
+   tibble,
+   rlang,
+   stats
 Depends: 
     R (>= 2.10)
