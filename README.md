@@ -3,9 +3,6 @@
 
 # BetaVolume <img src="man/figures/logo.png" align="right" height="137" />
 
-<!-- badges: start -->
-<!-- badges: end -->
-
 The goal of BetaVolume is to provides a new measure of beta diversity
 based on the geometric embedding of metacommunities.
 
