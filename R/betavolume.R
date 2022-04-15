@@ -13,23 +13,33 @@
 #' @return the value of the geometric measure of beta_diversity
 #' @export
 betavolume <- function(meta_composition,
-                        weights = T,
-                        hypervolume_method,
-                        dim_threshold = 10) {
-  if (nrow(meta_composition) < ncol(meta_composition)) {
-    meta_composition <- t(meta_composition)
+                       weights = F,
+                       hypervolume_method,
+                       dim_threshold = 10,
+                       remove_unique = F) {
+
+  weight_composition <- function(meta_composition) {
+    meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
+    weight <- meta_composition %>%
+      {
+        suppressMessages(as_tibble(.data, .name_repair = "unique"))
+      } %>%
+      group_by(across()) %>%
+      mutate(n = n()) %>%
+      ungroup() %>%
+      mutate(n = nrow(.data) * n / sum(n)) %>%
+      pull(n)
+    for (i in 1:nrow(meta_composition)) {
+      meta_composition[i, ] <- weight[i] * meta_composition[i, ]
+    }
+    meta_composition
   }
-
-  P <- ncol(meta_composition)
-  if (weights) meta_composition <- weight_composition(meta_composition)
-
-  meta_composition <- rbind(meta_composition, rep(0, P))
 
   estiamte_volume <- function(meta_composition, method, dimension) {
     if (method == "deterministic") {
       hypervolume <- tryCatch(
         {
-          P * (convhulln(meta_composition, output.options = TRUE)$vol)^(1 / P)
+          d * (convhulln(meta_composition, output.options = TRUE)$vol)^(1 / d)
         },
         error = function(e) {
           0
@@ -37,56 +47,35 @@ betavolume <- function(meta_composition,
       )
     }
     if (method == "hyper_normal") {
-      meta_composition <- unique(meta_composition, MARGIN = 1)
-      meta_composition <- unique(meta_composition, MARGIN = 2)
-
-      if (nrow(meta_composition) < ncol(meta_composition)) {
-        meta_composition <- t(meta_composition)
-      }
-
-      P <- ncol(meta_composition)
-
-      hypervolume_raw <- eigen(cov(meta_composition), only.values= T)$values %>%
+      hypervolume_raw <- eigen(cov(meta_composition), only.values = T)$values %>%
         log() %>%
-        {sum(.data)/length(.data)} %>%
+        {
+          sum(.data) / length(.data)
+        } %>%
         exp()
 
-      hypervolume <- P * hypervolume_raw * 4
+      hypervolume <- d * hypervolume_raw * 4
     }
     hypervolume
   }
 
+  if(remove_unique){
+    meta_composition <- unique(meta_composition, MARGIN = 1)
+    meta_composition <- unique(meta_composition, MARGIN = 2)
+  }
+
+  if (nrow(meta_composition) < ncol(meta_composition)) {
+    meta_composition <- t(meta_composition)
+  }
+
+  d <- ncol(meta_composition)
+  if (weights) meta_composition <- weight_composition(meta_composition)
+
   if (missing(method)) {
-    method <- ifelse(P > dim_threshold, "hyper_normal", "deterministic")
+    method <- ifelse(d > dim_threshold, "hyper_normal", "deterministic")
   }
 
-  estiamte_volume(meta_composition, method, dimension = P)
-}
+  meta_composition <- rbind(meta_composition, rep(0, d))
 
-#' Weight a metacommunity matrix according to the duplication scheme
-#'
-#' @param meta_composition metacommunity composition
-#'
-#' @importFrom dplyr group_by
-#' @importFrom stats cov
-#' @importFrom tibble as_tibble
-#' @importFrom rlang .data
-#'
-#' @return the value of the geometric measure of beta_diversity
-#' @export
-weight_composition <- function(meta_composition) {
-  meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
-  weight <- meta_composition %>%
-    {
-      suppressMessages(as_tibble(.data, .name_repair = "unique"))
-    } %>%
-    group_by(across()) %>%
-    mutate(n = n()) %>%
-    ungroup() %>%
-    mutate(n = nrow(.data) * n / sum(n)) %>%
-    pull(n)
-  for (i in 1:nrow(meta_composition)) {
-    meta_composition[i, ] <- weight[i] * meta_composition[i, ]
-  }
-  meta_composition
+  estiamte_volume(meta_composition, method, dimension = d)
 }

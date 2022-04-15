@@ -6,9 +6,10 @@
 \usage{
 betavolume(
   meta_composition,
-  weights = T,
+  weights = F,
   hypervolume_method,
-  dim_threshold = 10
+  dim_threshold = 10,
+  remove_unique = F
 )
 }
 \arguments{
