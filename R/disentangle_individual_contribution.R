@@ -5,7 +5,7 @@
 #' @param remove_unique whether unique compositions should be removed
 #' @return the value of the geometric measure of beta_diversity
 #' @export
-disentangle_patch_contribution <- function(meta_composition,
+disentangle_individual_contribution <- function(meta_composition,
                                            weights = F,
                                            remove_unique = F) {
   meta_composition <- preprocess_meta_composition(

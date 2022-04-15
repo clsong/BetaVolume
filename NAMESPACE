@@ -2,7 +2,7 @@
 
 export("%>%")
 export(betavolume)
-export(disentangle_patch_contribution)
+export(disentangle_individual_contribution)
 export(get_compressed_angle)
 export(preprocess_meta_composition)
 import(dplyr)

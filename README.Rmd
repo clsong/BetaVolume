@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # BetaVolume
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of BetaVolume is to ...
@@ -31,9 +32,26 @@ devtools::install_github("clsong/betavolume")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
+Here we show a basic example of this package. 
+```{r package}
 library(BetaVolume)
-## basic example code
+library(tidyverse)
+```
+
+We analyze an empirical metacommunity collected collected by A. H. Gentry and numerous additional collectors. This metacommunity has 81 species and 10 patches.
+
+```{r data_glance}
+head(example_meta_composition)
+```
+
+As this data only contains information of presence/absence of species, we adopt the duplication schemes to compute hypervolume beta diversity. The hypervolume beta diversity of this metacommunity is
+```{r warning=F}
+betavolume(example_meta_composition, weights = T)
+```
+
+We can disentagle the individual contribution of a patch to the overall beta diversity. We find that 
+```{r warning=F}
+disentangle_individual_contribution(example_meta_composition, weights = T) %>% 
+  enframe(name = "species", value = 'contribution') %>% 
+  arrange()
 ```
