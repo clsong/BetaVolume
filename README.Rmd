@@ -13,13 +13,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-# BetaVolume
+# BetaVolume <img src="man/figures/logo.png" align="right" height="137" />
 
 <!-- badges: start -->
 
 <!-- badges: end -->
 
-The goal of BetaVolume is to ...
+The goal of BetaVolume is to provides a new measure of beta diversity based on the geometric embedding of metacommunities. 
 
 ## Installation
 
@@ -33,12 +33,12 @@ devtools::install_github("clsong/betavolume")
 ## Example
 
 Here we show a basic example of this package. 
-```{r package}
+```{r warning=F, message=F}
 library(BetaVolume)
 library(tidyverse)
 ```
 
-We analyze an empirical metacommunity collected collected by A. H. Gentry and numerous additional collectors. This metacommunity has 81 species and 10 patches.
+We analyze an empirical metacommunity collected collected by A. H. Gentry and numerous additional collectors. This metacommunity has 37 species and 10 patches.
 
 ```{r data_glance}
 head(example_meta_composition)
@@ -49,7 +49,7 @@ As this data only contains information of presence/absence of species, we adopt 
 betavolume(example_meta_composition, weights = T)
 ```
 
-We can disentagle the individual contribution of a patch to the overall beta diversity. We find that 
+We can disentangle the individual contribution of a patch to the overall beta diversity. We find that 
 ```{r warning=F}
 disentangle_individual_contribution(example_meta_composition, weights = T) %>% 
   enframe(name = "species", value = 'contribution') %>% 
