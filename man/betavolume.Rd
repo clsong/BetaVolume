@@ -10,7 +10,7 @@ betavolume(
   weights = F,
   remove_unique = F,
   hypervolume_method,
-  similarity_angle = 1,
+  compressed_angle = 1,
   dim_threshold = 10
 )
 }
@@ -25,7 +25,7 @@ betavolume(
 
 \item{hypervolume_method}{which method to estimate the hypervolume}
 
-\item{similarity_angle}{how much the original hypervolume is changed by the similarity matrix}
+\item{compressed_angle}{how much the original hypervolume is changed by the similarity matrix}
 
 \item{dim_threshold}{the threshold of which default hypervolume_method is used}
 }

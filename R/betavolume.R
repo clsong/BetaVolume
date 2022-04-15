@@ -11,7 +11,7 @@
 #' @param hypervolume_method which method to estimate the hypervolume
 #' @param dim_threshold the threshold of which default hypervolume_method is used
 #' @param remove_unique whether unique compositions should be removed
-#' @param similarity_angle how much the original hypervolume is changed by the similarity matrix
+#' @param compressed_angle how much the original hypervolume is changed by the similarity matrix
 #' @return the value of the geometric measure of beta_diversity
 #' @export
 betavolume <- function(meta_composition,
@@ -19,7 +19,7 @@ betavolume <- function(meta_composition,
                        weights = F,
                        remove_unique = F,
                        hypervolume_method,
-                       similarity_angle = 1,
+                       compressed_angle = 1,
                        dim_threshold = 10) {
   estiamte_volume <- function(meta_composition, hypervolume_method, dimension) {
     if (hypervolume_method == "deterministic") {
@@ -59,10 +59,7 @@ betavolume <- function(meta_composition,
     hypervolume_method <- ifelse(d > dim_threshold, "hyper_normal", "deterministic")
   }
 
-  if(!missing(similarity_matrix)){
-    similarity_angle <- similarity_matrix()
-  }
   meta_composition <- rbind(meta_composition, rep(0, d))
 
-  similarity_angle * estiamte_volume(meta_composition, hypervolume_method, dimension = d)
+  compressed_angle * estiamte_volume(meta_composition, hypervolume_method, dimension = d)
 }
