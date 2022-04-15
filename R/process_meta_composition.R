@@ -2,11 +2,11 @@
 #' @param meta_composition metacommunity composition
 #' @param weights whether non-unique compositions should be weighted
 #' @param remove_unique whether unique compositions should be removed
-#' @return the value of the geometric measure of beta_diversity
+#' @return processed metacommunity composition
 #' @export
-process_meta_composition <- function(meta_composition,
-                                     weights,
-                                     remove_unique){
+preprocess_meta_composition <- function(meta_composition,
+                                        weights,
+                                        remove_unique) {
   weight_composition <- function(meta_composition) {
     meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
     weight <- meta_composition %>%
@@ -22,7 +22,7 @@ process_meta_composition <- function(meta_composition,
     meta_composition
   }
 
-  if(remove_unique){
+  if (remove_unique) {
     meta_composition <- unique(meta_composition, MARGIN = 1)
     meta_composition <- unique(meta_composition, MARGIN = 2)
   }

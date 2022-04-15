@@ -17,6 +17,8 @@ Imports:
    geometry,
    tibble,
    rlang,
-   stats
+   stats,
+   purrr,
+   mvtnorm
 Depends: 
     R (>= 2.10)

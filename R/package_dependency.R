@@ -2,6 +2,8 @@
 #' @import tidyr
 #' @import geometry
 #' @import tibble
-#' @import rlang
+#' @importFrom rlang .data
+#' @import purrr
 #' @importFrom stats cov
+#' @import mvtnorm
 NULL

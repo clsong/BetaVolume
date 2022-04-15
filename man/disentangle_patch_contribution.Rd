@@ -2,18 +2,18 @@
 % Please edit documentation in R/disentangle_patch_contribution.R
 \name{disentangle_patch_contribution}
 \alias{disentangle_patch_contribution}
-\title{Compute a metacommunity with}
+\title{Compute the patch-specific contribution to beta diversity}
 \usage{
-disentangle_patch_contribution()
+disentangle_patch_contribution(
+  meta_composition,
+  weights = F,
+  remove_unique = F
+)
 }
 \arguments{
 \item{meta_composition}{metacommunity composition}
 
 \item{weights}{whether non-unique compositions should be weighted}
-
-\item{hypervolume_method}{which method to estimate the hypervolume}
-
-\item{dim_threshold}{the threshold of which default hypervolume_method is used}
 
 \item{remove_unique}{whether unique compositions should be removed}
 }
@@ -21,5 +21,5 @@ disentangle_patch_contribution()
 the value of the geometric measure of beta_diversity
 }
 \description{
-Compute a metacommunity with
+Compute the patch-specific contribution to beta diversity
 }

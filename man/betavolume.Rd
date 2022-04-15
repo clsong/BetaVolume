@@ -6,22 +6,28 @@
 \usage{
 betavolume(
   meta_composition,
+  preprocess = T,
   weights = F,
+  remove_unique = F,
   hypervolume_method,
-  dim_threshold = 10,
-  remove_unique = F
+  similarity_angle = 1,
+  dim_threshold = 10
 )
 }
 \arguments{
 \item{meta_composition}{metacommunity composition}
 
+\item{preprocess}{Whether weights and remove_unique should be executed}
+
 \item{weights}{whether non-unique compositions should be weighted}
+
+\item{remove_unique}{whether unique compositions should be removed}
 
 \item{hypervolume_method}{which method to estimate the hypervolume}
 
-\item{dim_threshold}{the threshold of which default hypervolume_method is used}
+\item{similarity_angle}{how much the original hypervolume is changed by the similarity matrix}
 
-\item{remove_unique}{whether unique compositions should be removed}
+\item{dim_threshold}{the threshold of which default hypervolume_method is used}
 }
 \value{
 the value of the geometric measure of beta_diversity
