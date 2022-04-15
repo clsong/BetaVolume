@@ -3,7 +3,7 @@
 #' @param similarity_matrix a matrix denote the level of species similarity or functional complementarity
 #' @return the size of the similarity angle
 #' @export
-get_compressed_angle <- function(similarity_matrix){
+get_compressed_angle <- function(similarity_matrix) {
   S <- nrow(similarity_matrix)
   omega <- function(S, Sigma) {
     m <- matrix(0, S, 1)
@@ -16,8 +16,7 @@ get_compressed_angle <- function(similarity_matrix){
   f <- function(m) class(try(solve(t(m) %*% m), silent = T)) == "matrix"
   if (f(similarity_matrix) == FALSE) {
     return(0)
-  }
-  else {
+  } else {
     Sigma <- solve(t(similarity_matrix) %*% similarity_matrix)
     return(omega(S, Sigma))
   }

@@ -4,7 +4,7 @@
 \alias{preprocess_meta_composition}
 \title{Preprocess the metacommunity composition to facilitate computation of hypervolume}
 \usage{
-preprocess_meta_composition(meta_composition, weights, remove_unique)
+preprocess_meta_composition(meta_composition, weights = F, remove_unique = F)
 }
 \arguments{
 \item{meta_composition}{metacommunity composition}

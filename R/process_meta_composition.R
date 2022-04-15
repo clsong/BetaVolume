@@ -5,8 +5,8 @@
 #' @return processed metacommunity composition
 #' @export
 preprocess_meta_composition <- function(meta_composition,
-                                        weights,
-                                        remove_unique) {
+                                        weights = F,
+                                        remove_unique = F) {
   weight_composition <- function(meta_composition) {
     meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
     weight <- meta_composition %>%

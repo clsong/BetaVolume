@@ -6,8 +6,8 @@
 #' @return the value of the geometric measure of beta_diversity
 #' @export
 disentangle_individual_contribution <- function(meta_composition,
-                                           weights = F,
-                                           remove_unique = F) {
+                                                weights = F,
+                                                remove_unique = F) {
   meta_composition <- preprocess_meta_composition(
     meta_composition,
     weights,
@@ -30,4 +30,4 @@ disentangle_individual_contribution <- function(meta_composition,
     }
 }
 
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+if (getRversion() >= "2.15.1") utils::globalVariables(c("."))
