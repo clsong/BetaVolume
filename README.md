@@ -65,19 +65,19 @@ beta diversity. We find that
 ``` r
 disentangle_individual_contribution(example_meta_composition, weights = T) %>% 
   enframe(name = "species", value = 'contribution') %>% 
-  arrange()
+  arrange(-contribution)
 #> # A tibble: 81 × 2
 #>    species contribution
 #>      <int>        <dbl>
-#>  1       1     5.26e-16
-#>  2       2     1.18e-15
-#>  3       3    -6.57e-16
-#>  4       4     7.89e-16
-#>  5       5     0       
-#>  6       6     0       
-#>  7       7     0       
-#>  8       8     0       
-#>  9       9     0       
-#> 10      10     6.20e- 5
+#>  1      41      0.917  
+#>  2      45      0.0197 
+#>  3      24      0.00901
+#>  4      20      0.00856
+#>  5      15      0.00812
+#>  6      65      0.00654
+#>  7      37      0.00603
+#>  8      52      0.00488
+#>  9      59      0.00407
+#> 10      27      0.00385
 #> # … with 71 more rows
 ```

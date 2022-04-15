@@ -53,5 +53,5 @@ We can disentagle the individual contribution of a patch to the overall beta div
 ```{r warning=F}
 disentangle_individual_contribution(example_meta_composition, weights = T) %>% 
   enframe(name = "species", value = 'contribution') %>% 
-  arrange()
+  arrange(-contribution)
 ```
