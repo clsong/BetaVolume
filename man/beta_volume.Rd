@@ -9,10 +9,14 @@ beta_volume(meta_composition, weights = T, method, dim_threshold = 10)
 \arguments{
 \item{meta_composition}{metacommunity composition}
 
-\item{weights}{whether the hyper points shouldbe weightedß}
+\item{weights}{whether non-unique compositions should be weighted}
+
+\item{method}{which method to use to compute the hypervolume}
+
+\item{dim_threshold}{the threshold of which default method is used}
 }
 \value{
-the geometric measure of beta_diversity
+the value of the geometric measure of beta_diversity
 }
 \description{
 This function loads a file as a matrix.

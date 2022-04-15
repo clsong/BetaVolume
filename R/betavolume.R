@@ -4,10 +4,16 @@
 #' It assumes that columns correspond to local communities (plots or patches)
 #' while the columns correspond to species.
 #' The matrix entries correspond to species property (e.g, presence/absence).
+#'
 #' @param meta_composition metacommunity composition
 #' @param weights whether non-unique compositions should be weighted
 #' @param method which method to use to compute the hypervolume
 #' @param dim_threshold the threshold of which default method is used
+#'
+#' @importFrom geometry convhulln
+#' @importFrom stats cov
+#' @importFrom tibble as_tibble
+#'
 #' @return the value of the geometric measure of beta_diversity
 #' @export
 beta_volume <- function(meta_composition,
@@ -44,7 +50,12 @@ beta_volume <- function(meta_composition,
 
       P <- ncol(meta_composition)
 
-      hypervolume <- P * (MVNH_det(meta_composition)[1])^(1 / P) * 4
+      hypervolume_raw <- eigen(cov(meta_composition), only.values= T)$values %>%
+        log() %>%
+        {sum(.)/length(.)} %>%
+        exp()
+
+      hypervolume <- P * hypervolume_raw * 4
     }
     hypervolume
   }
@@ -61,66 +72,15 @@ weight_composition <- function(meta_composition) {
   meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
   weight <- meta_composition %>%
     {
-      suppressMessages(as_tibble(., .name_repair = "unique"))
+      suppressMessages(as_tibble(.data, .name_repair = "unique"))
     } %>%
     group_by(across()) %>%
     mutate(n = n()) %>%
     ungroup() %>%
-    mutate(n = nrow(.) * n / sum(n)) %>%
+    mutate(n = nrow(.data) * n / sum(n)) %>%
     pull(n)
   for (i in 1:nrow(meta_composition)) {
     meta_composition[i, ] <- weight[i] * meta_composition[i, ]
   }
   meta_composition
 }
-
-#'
-#' calcualte_max_MVHH_det <- function(P){
-#'   # matrix(rep(c(1,0), P), ncol = P) %>%
-#'   #   split(rep(1:ncol(.), each = nrow(.))) %>%
-#'   #   cross() %>%
-#'   #   map(unlist) %>%
-#'   #   bind_rows() %>%
-#'   #   rbind(rep(0, P)) %>%
-#'   #   MVNH_det() %>%
-#'   #   first()
-#'
-#'   expand_grid(
-#'     a = 0:1,
-#'     b = 0:1
-#'   ) %>%
-#'     {.[rep(seq_len(nrow(.)), each = 2^P/4), ]} %>%
-#'     cov()
-#' }
-
-# max_beta <- function(P) {
-#   matrix(rep(c(1, 0), P), ncol = P) %>%
-#     split(rep(1:ncol(.),
-#               each = nrow(.)
-#     )) %>%
-#     cross() %>%
-#     map(unlist) %>%
-#     bind_rows()
-# }
-#
-# max_beta(10) %>%
-#   select(`1`, `2`) %>%
-#   distinct() %>%
-#   {.[rep(seq_len(nrow(.)), each = 256), ]} %>%
-#   cov()
-#
-# cov(max_beta(10)) %>% diag()
-#
-# MVNH_det(max_beta(10))[1]
-#
-# MVNH_det(cov = cov(max_beta(10)), cov.matrix=TRUE)
-
-# Maximum beta diversity
-# max_MVHH_det <- 1:20 %>%
-#   pro_map_dbl(calcualte_max_MVHH_det)
-# max_MVHH_det
-# max_MVHH_det_2 <- 21:30 %>%
-#     future_map_dbl(calcualte_max_MVHH_det, .progress = T)
-# max_MVHH_det <- 1:100 %>%
-#   purrr::map_dbl(~MVNH_det(cov = diag(1/4, .), cov.matrix=TRUE)[1])
-# usethis::use_data(max_MVHH_det, overwrite = TRUE)

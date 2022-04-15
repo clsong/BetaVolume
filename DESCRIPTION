@@ -1,4 +1,4 @@
-Package: betavolume
+Package: BetaVolume
 Type: Package
 Title: A geometric measure of beta diversity in metacommunities
 Version: 0.1.0
@@ -16,6 +16,6 @@ Imports:
    tidyr,
    purrr,
    geometry,
-   MVNH
+   tibble
 Depends: 
     R (>= 2.10)
