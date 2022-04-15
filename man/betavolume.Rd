@@ -19,7 +19,7 @@ betavolume(
 
 \item{hypervolume_method}{which method to estimate the hypervolume}
 
-\item{dim_threshold}{the threshold of which default method is used}
+\item{dim_threshold}{the threshold of which default hypervolume_method is used}
 }
 \value{
 the value of the geometric measure of beta_diversity

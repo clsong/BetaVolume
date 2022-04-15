@@ -3,4 +3,5 @@
 #' @import geometry
 #' @import tibble
 #' @import rlang
+#' @importFrom stats cov
 NULL
