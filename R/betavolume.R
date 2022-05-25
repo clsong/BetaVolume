@@ -65,8 +65,9 @@ betavolume <- function(meta_composition,
           sum(.) / length(.)
         } %>%
         exp()
-      d * hypervolume_raw * 4
+      hypervolume <- d * hypervolume_raw * 4
     }
+
     hypervolume
   }
 
