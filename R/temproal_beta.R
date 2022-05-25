@@ -20,5 +20,5 @@ beta_temporal_overlap <- function(meta_composition_1,
 
   d <- ncol(meta_composition_1)
 
-  (intersectn(meta_composition_1, meta_composition_2)$ch$vol)^(1/d) / (convhulln(meta_composition_1, output.options = TRUE)$vol)^(1 / d)
+  (intersectn(meta_composition_1, meta_composition_2)$ch$vol)^(1 / d) / (convhulln(meta_composition_1, output.options = TRUE)$vol)^(1 / d)
 }

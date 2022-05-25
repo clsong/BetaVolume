@@ -23,7 +23,7 @@ betavolume <- function(meta_composition,
                        compressed_angle = 1,
                        dim_threshold = 10,
                        sparsity = F) {
-  estiamte_volume <- function(meta_composition, hypervolume_method, dimension) {
+  estiamte_volume <- function(meta_composition, hypervolume_method, dimension, sparsity) {
     if (hypervolume_method == "deterministic") {
       hypervolume <- tryCatch(
         {
@@ -86,5 +86,5 @@ betavolume <- function(meta_composition,
 
   meta_composition <- rbind(meta_composition, rep(0, d))
 
-  compressed_angle * estiamte_volume(meta_composition, hypervolume_method, dimension = d)
+  compressed_angle * estiamte_volume(meta_composition, hypervolume_method, dimension = d, sparsity)
 }
