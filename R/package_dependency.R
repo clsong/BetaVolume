@@ -1,10 +1,10 @@
 #' @import dplyr
-#' @import tidyr
+## @import tidyr
 #' @import geometry
 #' @import tibble
 #' @importFrom rlang .data
 #' @import purrr
 #' @importFrom stats cov
 #' @import mvtnorm
-### @import Matrix
+#' @import Matrix
 NULL

@@ -19,6 +19,7 @@ Imports:
    rlang,
    stats,
    purrr,
-   mvtnorm
+   mvtnorm,
+   Matrix
 Depends: 
     R (>= 2.10)
