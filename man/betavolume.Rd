@@ -11,7 +11,8 @@ betavolume(
   remove_unique = F,
   hypervolume_method,
   compressed_angle = 1,
-  dim_threshold = 10
+  dim_threshold = 10,
+  sparsity = F
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ betavolume(
 \item{compressed_angle}{how much the original hypervolume is changed by the similarity matrix}
 
 \item{dim_threshold}{the threshold of which default hypervolume_method is used}
+
+\item{sparsity}{whether the meta_composition is encoded as a sparse matrix}
 }
 \value{
 the value of the geometric measure of beta_diversity

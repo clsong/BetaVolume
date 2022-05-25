@@ -12,6 +12,7 @@
 #' @param dim_threshold the threshold of which default hypervolume_method is used
 #' @param remove_unique whether unique compositions should be removed
 #' @param compressed_angle how much the original hypervolume is changed by the similarity matrix
+#' @param sparsity whether the meta_composition is encoded as a sparse matrix
 #' @return the value of the geometric measure of beta_diversity
 #' @export
 betavolume <- function(meta_composition,
@@ -20,7 +21,8 @@ betavolume <- function(meta_composition,
                        remove_unique = F,
                        hypervolume_method,
                        compressed_angle = 1,
-                       dim_threshold = 10) {
+                       dim_threshold = 10,
+                       sparsity = F) {
   estiamte_volume <- function(meta_composition, hypervolume_method, dimension) {
     if (hypervolume_method == "deterministic") {
       hypervolume <- tryCatch(
@@ -32,7 +34,7 @@ betavolume <- function(meta_composition,
         }
       )
     }
-    if (hypervolume_method == "hyper_normal") {
+    if (hypervolume_method == "hyper_normal" & !sparsity) {
       hypervolume_raw <- eigen(cov(meta_composition), only.values = T)$values %>%
         log() %>%
         {
@@ -41,6 +43,29 @@ betavolume <- function(meta_composition,
         exp()
 
       hypervolume <- d * hypervolume_raw * 4
+    }
+    if (hypervolume_method == "hyper_normal" & sparsity) {
+      sparse.cov <- function(x) {
+        n <- nrow(x)
+        m <- ncol(x)
+        ii <- unique(x@i) + 1 # rows with a non-zero element
+
+        Ex <- colMeans(x)
+        nozero <- as.vector(x[ii, ]) - rep(Ex, each = length(ii)) # colmeans
+
+        covmat <- (crossprod(matrix(nozero, ncol = m)) +
+          crossprod(t(Ex)) * (n - length(ii))
+        ) / (n - 1)
+        covmat
+      }
+      cov_mat <- sparse.cov(meta_composition)
+      hypervolume_raw <- eigen(cov_mat, only.values = T)$values %>%
+        log() %>%
+        {
+          sum(.) / length(.)
+        } %>%
+        exp()
+      d * hypervolume_raw * 4
     }
     hypervolume
   }
