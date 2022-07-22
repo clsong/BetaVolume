@@ -9,8 +9,9 @@ preprocess_meta_composition <- function(meta_composition,
                                         remove_unique = F) {
   weight_composition <- function(meta_composition) {
     meta_composition <- meta_composition[which(rowSums(meta_composition) != 0), ]
+    colnames(meta_composition) <- paste0("x", 1:ncol(meta_composition))
     weight <- meta_composition %>%
-      as_tibble(.name_repair = "unique") %>%
+      as_tibble() %>%
       group_by(across()) %>%
       mutate(n = n()) %>%
       ungroup() %>%
