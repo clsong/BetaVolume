@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# BetaVolume <img src="man/figures/logo.png" align="right" height="137" />
+# BetaVolume <img src="man/figures/logo_2.png" align="right" height="137" />
 
 The goal of BetaVolume is to provides a new measure of beta diversity
 based on the geometric embedding of metacommunities.
