@@ -22,23 +22,28 @@
 #' With presence/absence data several communities often share exactly the same
 #' composition and are therefore embedded at the same point. With
 #' `weights = TRUE` all-zero rows are dropped and each row is multiplied by a
-#' weight proportional to the number of times its composition occurs. With
-#' `weight_scheme = "paper"` (the default) the weight of a composition that
-#' occurs \eqn{n_k} times is
-#' \deqn{w_k = \frac{m \, n_k}{\sum_{l=1}^{m} n_l},}{w_k = m n_k / sum(n_l),}
-#' where \eqn{m} is the number of unique compositions (Eq. 5 of the paper). The
-#' weights average to one over the unique compositions, so a metacommunity
-#' without duplicates is left unchanged. For the six-community example of
-#' Fig. 4 of the paper the weights are \eqn{3 \times 1/6}{3 x 1/6}, \eqn{3 \times 2/6}{3 x 2/6}
-#' and \eqn{3 \times 3/6}{3 x 3/6}.
-#'
-#' `weight_scheme = "legacy"` reproduces BetaVolume <= 0.1.0, which used
-#' \eqn{w_k = N n_k / \sum_l n_l^2}{w_k = N n_k / sum(n_l^2)} with \eqn{N} the number of non-empty rows.
-#' Both schemes are proportional to \eqn{n_k} and therefore give **identical
-#' relative contributions** ([disentangle_individual_contribution()]), but the
-#' legacy weights are smaller by the factor \eqn{m \sum_l n_l^2 / N^2 \ge 1}{m sum(n_l^2) / N^2 >= 1},
-#' so `betavolume(weights = TRUE)` values differ. Use `"legacy"` only to
-#' reproduce results computed with older versions of the package.
+#' weight proportional to the number of times \eqn{n_k} its composition
+#' occurs. Two normalisations are available, with \eqn{N} the number of
+#' non-empty communities and \eqn{m} the number of unique compositions:
+#' \describe{
+#'   \item{`"legacy"` (default)}{\eqn{w_k = N n_k / \sum_l n_l^2}{w_k = N n_k / sum(n_l^2)}.
+#'     The weights average to one over communities. This is the normalisation
+#'     used for all analyses of Song et al. (2025), including Figs. 9 and 10,
+#'     and in practice it keeps \eqn{\beta_{vol}} within its range
+#'     \eqn{[0, d]}.}
+#'   \item{`"paper"`}{\eqn{w_k = m n_k / N}{w_k = m n_k / N}, as printed in
+#'     Eq. 5 and Fig. 4 of the paper. The weights average to one over unique
+#'     compositions. Because they can exceed one substantially,
+#'     \eqn{\beta_{vol}} can exceed its nominal maximum \eqn{d}: the Fig. 4
+#'     example gives 2.12 for two species, and about one in ten random
+#'     presence/absence metacommunities exceeds \eqn{d}.}
+#' }
+#' Both leave a metacommunity without duplicates unchanged. They are
+#' proportional to each other, differing by the factor
+#' \eqn{m \sum_l n_l^2 / N^2 \ge 1}{m sum(n_l^2) / N^2 >= 1}, so they give
+#' **identical relative contributions**
+#' ([disentangle_individual_contribution()]) but different
+#' `betavolume(weights = TRUE)` values.
 #'
 #' @param meta_composition A numeric matrix (or data frame, or sparse
 #'   [Matrix::Matrix]) with communities in rows and species in columns (or the
@@ -52,9 +57,10 @@
 #' @param remove_unique Logical. Remove duplicated rows and duplicated columns
 #'   before embedding? Default `FALSE`. (Despite the historical name, this
 #'   keeps one copy of each *unique* row/column.)
-#' @param weight_scheme Either `"paper"` (default, Eq. 5 of Song et al. 2025) or
-#'   `"legacy"` (weights used by BetaVolume <= 0.1.0). Only used when
-#'   `weights = TRUE`.
+#' @param weight_scheme Normalisation of the weights: `"legacy"` (default; the
+#'   weights used for the analyses of Song et al. 2025) or `"paper"` (Eq. 5 as
+#'   printed in the paper). See the section on the weighted embedding. Only
+#'   used when `weights = TRUE`.
 #'
 #' @return A numeric matrix (sparse if the input was sparse) whose rows are the
 #'   embedded points and whose columns are the axes, i.e. with
@@ -76,14 +82,15 @@
 #'   c(1, 1), c(1, 1), c(1, 1)
 #' )
 #' colnames(fig4) <- c("A", "B")
-#' preprocess_meta_composition(fig4, weights = TRUE)
+#' preprocess_meta_composition(fig4, weights = TRUE) # default "legacy" weights
+#' preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "paper") # Eq. 5
 #'
 #' # Wide matrices are transposed so that rows are the embedded points
 #' dim(preprocess_meta_composition(t(fig4)))
 preprocess_meta_composition <- function(meta_composition,
                                         weights = FALSE,
                                         remove_unique = FALSE,
-                                        weight_scheme = c("paper", "legacy")) {
+                                        weight_scheme = c("legacy", "paper")) {
   check_flag(weights, "weights")
   check_flag(remove_unique, "remove_unique")
   weight_scheme <- match.arg(weight_scheme)
@@ -110,7 +117,7 @@ preprocess_meta_composition <- function(meta_composition,
 
 #' Weighted embedding of duplicated compositions (Song et al. 2025, Eq. 5)
 #' @noRd
-weight_composition <- function(x, weight_scheme = "paper") {
+weight_composition <- function(x, weight_scheme = "legacy") {
   nonzero <- if (is_sparse(x)) Matrix::rowSums(x != 0) > 0 else rowSums(x != 0) > 0
   x <- x[nonzero, , drop = FALSE]
   if (nrow(x) == 0L) {

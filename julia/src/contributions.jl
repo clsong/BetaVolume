@@ -1,6 +1,6 @@
 """
     contributions(Z; weights = false, remove_unique = false, method = :auto,
-                  dim_threshold = 10, preprocess = true, weight_scheme = :paper)
+                  dim_threshold = 10, preprocess = true, weight_scheme = :legacy)
         -> (values, units)
 
 Contribution of each embedded point (a community or a species, whichever is the more
@@ -49,7 +49,7 @@ c.units   # [[1], [2, 3], [4, 5, 6]]
 """
 function contributions(Z; weights::Bool = false, remove_unique::Bool = false,
                        method = :auto, dim_threshold::Real = 10, preprocess::Bool = true,
-                       weight_scheme = :paper)
+                       weight_scheme = :legacy)
     scheme = _resolve_scheme(weight_scheme)
     if preprocess
         E = _preprocess(Z, weights, remove_unique, scheme)

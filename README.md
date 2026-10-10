@@ -121,11 +121,12 @@ betavolume(example_meta_composition)
 ```
 
 With presence/absence data, duplicated compositions can be weighted by
-their frequency (Eq. 5 of the paper):
+their frequency (see `?preprocess_meta_composition` for the two
+available normalisations, `weight_scheme = "legacy"` and `"paper"`):
 
 ``` r
 betavolume(example_meta_composition, weights = TRUE)
-#> [1] 4.012102
+#> [1] 2.461931
 ```
 
 Which species contribute the most to beta diversity?
@@ -202,9 +203,10 @@ R, set the `cores` argument to recompute hulls in parallel.
 
 Version 0.2.0 fixes several bugs of version 0.1.0 and aligns the package
 with the published equations. See [NEWS.md](NEWS.md) for details. In
-particular, `betavolume(weights = TRUE)` now uses the weights of Eq. 5
-(`weight_scheme = "legacy"` reproduces older results), and the exact
-method no longer silently returns 0 on degenerate presence/absence data.
+particular, `weight_scheme = "paper"` offers the weights exactly as
+printed in Eq. 5 (the default, `"legacy"`, is the normalisation used for
+the paper’s analyses), and the exact method no longer silently returns 0
+on degenerate presence/absence data.
 
 ## Citation
 

@@ -260,7 +260,8 @@ test_that("results of BetaVolume 0.1.0 are reproduced", {
   expect_equal(betavolume(ex, hypervolume_method = "hyper_normal"), 4.51708592656972,
     tolerance = 1e-10
   )
-  # The old weights are available as weight_scheme = "legacy"
+  # The weights of 0.1.0 are the default ("legacy")
+  expect_equal(betavolume(ex, weights = TRUE), 2.46193067726437, tolerance = 1e-10)
   expect_equal(betavolume(ex, weights = TRUE, weight_scheme = "legacy"), 2.46193067726437,
     tolerance = 1e-10
   )

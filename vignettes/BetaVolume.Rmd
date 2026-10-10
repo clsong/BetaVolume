@@ -107,10 +107,9 @@ tapply(beta, n_unique, max)
 
 With presence/absence data many communities share the same composition and
 map to the same point, so the plain hypervolume ignores how often each
-composition occurs. With `weights = TRUE`, BetaVolume uses the weighted
-embedding of Eq. 5 of the paper. Each unique composition $k$ that occurs
-$n_k$ times among $N$ communities is scaled by $m\,n_k/N$, where $m$ is the
-number of unique compositions. This is the example of Fig. 4:
+composition occurs. With `weights = TRUE`, BetaVolume uses a weighted
+embedding: each unique composition $k$ that occurs $n_k$ times is scaled by a
+weight proportional to $n_k$. This is the example of Fig. 4:
 
 ```{r}
 fig4 <- rbind(
@@ -124,18 +123,24 @@ betavolume(fig4) # duplicates ignored
 betavolume(fig4, weights = TRUE) # duplicates weighted
 ```
 
-The weights average to one over the unique compositions, so metacommunities
-without duplicates are unaffected.
+Two normalisations of the weights are available through `weight_scheme`,
+with $N$ the number of non-empty communities and $m$ the number of unique
+compositions:
 
-**Note for users of BetaVolume 0.1.0.** Older versions used the weights
-$N n_k / \sum_l n_l^2$, which are proportional to (but smaller than) the
-weights of Eq. 5. They give the same contributions (below) but smaller
-`betavolume(weights = TRUE)` values. Use `weight_scheme = "legacy"` to
-reproduce old results:
+* `"legacy"` (default): $w_k = N n_k / \sum_l n_l^2$, which averages to one
+  over communities. This is the normalisation used for all analyses in the
+  paper (including Figs. 9 and 10), and in practice it keeps $\beta_{vol}$
+  within its range $[0, d]$.
+* `"paper"`: $w_k = m\,n_k / N$, as printed in Eq. 5 and Fig. 4 of the paper,
+  which averages to one over unique compositions. These weights can push
+  $\beta_{vol}$ above its nominal maximum $d$:
 
 ```{r}
-betavolume(fig4, weights = TRUE, weight_scheme = "legacy")
+betavolume(fig4, weights = TRUE, weight_scheme = "paper") # > d = 2
 ```
+
+Both leave metacommunities without duplicates unchanged and give identical
+contributions (below), because they are proportional to each other.
 
 ## Which communities matter? Contributions to beta diversity
 

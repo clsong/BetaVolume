@@ -115,7 +115,7 @@ betavolume <- function(meta_composition,
                        compressed_angle = 1,
                        dim_threshold = 10,
                        sparsity,
-                       weight_scheme = c("paper", "legacy")) {
+                       weight_scheme = c("legacy", "paper")) {
   check_flag(preprocess, "preprocess")
   if (!is.numeric(compressed_angle) || length(compressed_angle) != 1L ||
     !is.finite(compressed_angle) || compressed_angle < 0) {

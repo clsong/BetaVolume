@@ -1,6 +1,6 @@
 """
     temporal_overlap(Z1, Z2; oriented = false, preprocess = true, weights = false,
-                     weight_scheme = :paper, remove_unique = false) -> Float64
+                     weight_scheme = :legacy, remove_unique = false) -> Float64
 
 Temporal change of beta diversity as the (oriented) overlap of the hypervolumes at two
 times (Song et al. 2025, Eq. 6 and Fig. 5; R: `beta_temporal_overlap`):
@@ -36,7 +36,7 @@ temporal_overlap(t1, t2; oriented = true)  # √2
 ```
 """
 function temporal_overlap(Z1, Z2; oriented::Bool = false, preprocess::Bool = true,
-                          weights::Bool = false, weight_scheme = :paper,
+                          weights::Bool = false, weight_scheme = :legacy,
                           remove_unique::Bool = false)
     scheme = _resolve_scheme(weight_scheme)
     m1 = _as_matrix(Z1, "Z1")

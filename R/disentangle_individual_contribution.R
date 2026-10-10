@@ -84,7 +84,7 @@ disentangle_individual_contribution <- function(meta_composition,
                                                 hypervolume_method,
                                                 dim_threshold = 10,
                                                 preprocess = TRUE,
-                                                weight_scheme = c("paper", "legacy"),
+                                                weight_scheme = c("legacy", "paper"),
                                                 cores = getOption("BetaVolume.cores", 1L)) {
   check_flag(preprocess, "preprocess")
   if (!is.numeric(cores) || length(cores) != 1L || is.na(cores) || cores < 1) {

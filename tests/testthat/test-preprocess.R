@@ -5,7 +5,7 @@ fig4 <- rbind(
 )
 
 test_that("Fig. 4: weighted embedding of duplicated compositions (Eq. 5)", {
-  w <- preprocess_meta_composition(fig4, weights = TRUE)
+  w <- preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "paper")
   # (no. unique compositions) x (no. communities with the composition) / (no. communities)
   expected <- rbind(
     c(3 * 1 / 6, 0),
@@ -13,10 +13,14 @@ test_that("Fig. 4: weighted embedding of duplicated compositions (Eq. 5)", {
     c(3 * 3 / 6, 3 * 3 / 6), c(3 * 3 / 6, 3 * 3 / 6), c(3 * 3 / 6, 3 * 3 / 6)
   )
   expect_equal(unname(w), expected)
-  expect_equal(betavolume(fig4, weights = TRUE), 2 * sqrt(1.125))
+  expect_equal(betavolume(fig4, weights = TRUE, weight_scheme = "paper"), 2 * sqrt(1.125))
 })
 
-test_that("legacy weights of BetaVolume 0.1.0 are available", {
+test_that("legacy weights (the default) match BetaVolume 0.1.0", {
+  expect_identical(
+    preprocess_meta_composition(fig4, weights = TRUE),
+    preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "legacy")
+  )
   w <- preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "legacy")
   # N n_k / sum_l n_l^2 with N = 6 and sum n_l^2 = 1 + 4 + 9 = 14
   expect_equal(unname(w[, 1]), 6 * c(1, 0, 0, 3, 3, 3) / 14)
@@ -26,7 +30,7 @@ test_that("legacy weights of BetaVolume 0.1.0 are available", {
 test_that("both weighting schemes are proportional to the multiplicity", {
   set.seed(1)
   m <- matrix(stats::rbinom(40 * 4, 1, 0.5), 40, 4)
-  p <- preprocess_meta_composition(m, weights = TRUE)
+  p <- preprocess_meta_composition(m, weights = TRUE, weight_scheme = "paper")
   l <- preprocess_meta_composition(m, weights = TRUE, weight_scheme = "legacy")
   ratio <- p[p != 0] / l[l != 0]
   expect_equal(ratio, rep(ratio[1], length(ratio)))
@@ -86,4 +90,10 @@ test_that("row keys agree with base::duplicated for dense and sparse matrices", 
   expect_identical(duplicated(BetaVolume:::row_keys(m)), as.vector(duplicated(m)))
   sm <- Matrix::Matrix(m, sparse = TRUE)
   expect_identical(duplicated(BetaVolume:::row_keys(sm)), as.vector(duplicated(m)))
+})
+
+test_that("legacy weights keep beta_vol within [0, d] more often than Eq. 5", {
+  # Fig. 4: Eq. 5 weights exceed the maximum d = 2, legacy weights do not
+  expect_gt(betavolume(fig4, weights = TRUE, weight_scheme = "paper"), 2)
+  expect_lte(betavolume(fig4, weights = TRUE), 2)
 })

@@ -13,7 +13,7 @@ betavolume(
   compressed_angle = 1,
   dim_threshold = 10,
   sparsity,
-  weight_scheme = c("paper", "legacy")
+  weight_scheme = c("legacy", "paper")
 )
 }
 \arguments{
@@ -53,9 +53,10 @@ hyper-normal approximation otherwise. Default 10.}
 \item{sparsity}{Logical. Is \code{meta_composition} a sparse matrix? Detected
 automatically; kept for backward compatibility.}
 
-\item{weight_scheme}{Either \code{"paper"} (default, Eq. 5 of Song et al. 2025) or
-\code{"legacy"} (weights used by BetaVolume <= 0.1.0). Only used when
-\code{weights = TRUE}.}
+\item{weight_scheme}{Normalisation of the weights: \code{"legacy"} (default; the
+weights used for the analyses of Song et al. 2025) or \code{"paper"} (Eq. 5 as
+printed in the paper). See the section on the weighted embedding. Only
+used when \code{weights = TRUE}.}
 }
 \value{
 A single non-negative number: the geometric beta diversity.

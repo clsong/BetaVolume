@@ -108,10 +108,12 @@ angles <- lapply(angle_mats, function(S) {
 
 # Temporal overlaps (2-4 dimensions)
 temporal <- list()
-add_temporal <- function(m1, m2, oriented = FALSE, weights = FALSE) {
-  v <- quiet(beta_temporal_overlap(m1, m2, oriented = oriented, weights = weights))
+add_temporal <- function(m1, m2, oriented = FALSE, weights = FALSE, scheme = "legacy") {
+  v <- quiet(beta_temporal_overlap(m1, m2,
+    oriented = oriented, weights = weights, weight_scheme = scheme
+  ))
   temporal[[length(temporal) + 1]] <<- list(
-    Z1 = m1, Z2 = m2, oriented = oriented, weights = weights, value = v
+    Z1 = m1, Z2 = m2, oriented = oriented, weights = weights, scheme = scheme, value = v
   )
 }
 set.seed(77)
@@ -125,6 +127,7 @@ for (p in 2:4) {
     b2 <- gen_binary(n, p, 0.5)
     add_temporal(b1, b2)
     add_temporal(b1, b2, weights = TRUE)
+    add_temporal(b1, b2, weights = TRUE, scheme = "paper")
   }
   for (k in 1:3) {
     s1 <- matrix(round(stats::runif(p * p), 3), p, p)

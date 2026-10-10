@@ -118,7 +118,9 @@ test_that("parallel and serial exact contributions are identical", {
 test_that("hyper-normal contributions do not overflow with many duplicates", {
   # n * n_k exceeded .Machine$integer.max in BetaVolume 0.2.0-dev
   m <- rbind(matrix(c(1, 0, 0), 46500, 3, byrow = TRUE), diag(3), c(1, 1, 0), c(0, 1, 1))
-  ctb <- disentangle_individual_contribution(m, weights = TRUE, hypervolume_method = "hyper_normal")
+  ctb <- disentangle_individual_contribution(m,
+    weights = TRUE, weight_scheme = "paper", hypervolume_method = "hyper_normal"
+  )
   expect_false(anyNA(ctb))
   expect_equal(sum(ctb), 1)
 })

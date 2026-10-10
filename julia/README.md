@@ -38,11 +38,10 @@ using BetaVolume
 betavolume([1 0; 0 1])          # metacommunity I  {A}, {B}:        2√(1/2) ≈ 1.414
 betavolume([1 0; 0 1; 1 1])     # metacommunity II {A}, {B}, {A,B}: 2 (the maximum)
 
-# Fig. 4: duplicated presence/absence compositions, weighted embedding (Eq. 5)
+# Fig. 4: duplicated presence/absence compositions, weighted embedding
 fig4 = [1 0; 0 1; 0 1; 1 1; 1 1; 1 1]
-preprocess(fig4; weights = true).points   # rows scaled by 0.5, 1, 1, 1.5, 1.5, 1.5
-betavolume(fig4; weights = true)          # 2√1.125 ≈ 2.121
-betavolume(fig4; weights = true, weight_scheme = :legacy)  # 1.818 (BetaVolume ≤ 0.1.0)
+betavolume(fig4; weights = true)                          # 1.818 (default :legacy weights)
+betavolume(fig4; weights = true, weight_scheme = :paper)  # 2.121 (Eq. 5 as printed)
 
 # Fig. 6: contributions of the three unique compositions (Eq. 7)
 c = contributions(fig4; weights = true)
@@ -73,11 +72,11 @@ contributions(Z; method = :hyper_normal)
 
 | Julia | R | Description |
 |---|---|---|
-| `betavolume(Z; preprocess=true, weights=false, remove_unique=false, method=:auto, dim_threshold=10, compressed_angle=1.0, weight_scheme=:paper)` | `betavolume()` | Geometric beta diversity. `method` ∈ `:auto`, `:exact` (alias `:deterministic`), `:hyper_normal`; `:auto` is exact for `d ≤ dim_threshold`. |
-| `preprocess(Z; weights=false, remove_unique=false, weight_scheme=:paper)` → `(points, ids, transposed)` | `preprocess_meta_composition()` | Orientation (rows = points), duplicate removal, weighted embedding. `ids[i]` is the row of `Z` (column if `transposed`) of embedded point `i`. |
-| `contributions(Z; weights=false, remove_unique=false, method=:auto, dim_threshold=10, preprocess=true, weight_scheme=:paper)` → `(values, units)` | `disentangle_individual_contribution()` | Normalised leave-one-out losses (Eq. 7). `units[k]` lists the `ids` forming unit `k` (R uses names such as `"2, 3"`). |
+| `betavolume(Z; preprocess=true, weights=false, remove_unique=false, method=:auto, dim_threshold=10, compressed_angle=1.0, weight_scheme=:legacy)` | `betavolume()` | Geometric beta diversity. `method` ∈ `:auto`, `:exact` (alias `:deterministic`), `:hyper_normal`; `:auto` is exact for `d ≤ dim_threshold`. |
+| `preprocess(Z; weights=false, remove_unique=false, weight_scheme=:legacy)` → `(points, ids, transposed)` | `preprocess_meta_composition()` | Orientation (rows = points), duplicate removal, weighted embedding. `ids[i]` is the row of `Z` (column if `transposed`) of embedded point `i`. |
+| `contributions(Z; weights=false, remove_unique=false, method=:auto, dim_threshold=10, preprocess=true, weight_scheme=:legacy)` → `(values, units)` | `disentangle_individual_contribution()` | Normalised leave-one-out losses (Eq. 7). `units[k]` lists the `ids` forming unit `k` (R uses names such as `"2, 3"`). |
 | `compressed_angle(S; m=25_000*size(S,1), rng=Random.default_rng())` | `get_compressed_angle()` | `Ω(S)^(1/d)`; exact for `d ≤ 3`, quasi-Monte Carlo (Genz) with `m` points otherwise. |
-| `temporal_overlap(Z1, Z2; oriented=false, preprocess=true, weights=false, weight_scheme=:paper)` | `beta_temporal_overlap()` | `(vol(P₁ ∩ P₂)/vol(P₁))^(1/d)`, optionally oriented. |
+| `temporal_overlap(Z1, Z2; oriented=false, preprocess=true, weights=false, weight_scheme=:legacy)` | `beta_temporal_overlap()` | `(vol(P₁ ∩ P₂)/vol(P₁))^(1/d)`, optionally oriented. |
 
 The R names are exported as aliases (`preprocess_meta_composition`,
 `disentangle_individual_contribution`, `get_compressed_angle`, `beta_temporal_overlap`).
@@ -93,7 +92,8 @@ accepted); R's `sparsity` argument is unnecessary (sparse input is detected by t
 - **Hyper-normal**: `β ≈ 4 d det(Σ)^(1/d)`, `Σ` = covariance (n − 1 denominator) of the
   points plus the origin; 0 when `Σ` is singular. Scales quadratically, `β(cZ) = c²β(Z)`.
 - **Weights** (Eq. 5): composition with multiplicity `n_k`, `N` non-empty rows, `m` unique
-  compositions: `w_k = m n_k / N` (`:paper`) or `N n_k / Σ n_l²` (`:legacy`).
+  compositions: `N n_k / Σ n_l²` (`:legacy`, the default, used for the paper's analyses)
+  or `m n_k / N` (`:paper`, Eq. 5 as printed).
 - **Contributions** (Eq. 7):
   `C_i = (vol(P₀)^(1/d) − vol(P₋ᵢ)^(1/d)) / Σ_j (vol(P₀)^(1/d) − vol(P₋ⱼ)^(1/d))`.
 - **Compressed angle** (Eq. 8): `Ω(S) = 2^d P(Z ≥ 0)`, `Z ~ N(0, (S'S)⁻¹)`.

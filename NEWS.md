@@ -8,14 +8,19 @@ documentation, a vignette and a test suite. A companion Julia package lives in
 
 ## Changes that can alter results
 
-* **Weighted embedding now follows Eq. 5 of the paper.** With
+* **New `weight_scheme` argument for the weighted embedding.** With
   `weights = TRUE`, a composition occurring `n_k` times among `N` communities
-  with `m` unique compositions is weighted by `m * n_k / N` (Fig. 4 of the
-  paper). Version 0.1.0 used `N * n_k / sum(n_l^2)`, which is proportional
-  but smaller by the factor `m * sum(n_l^2) / N^2 >= 1`. Contributions are
-  unaffected, but `betavolume(weights = TRUE)` values are larger than before.
-  Use `weight_scheme = "legacy"` to reproduce results of version 0.1.0 (for
-  example Fig. 9 of the paper).
+  with `m` unique compositions is weighted by either
+  - `"legacy"` (default): `N * n_k / sum(n_l^2)`, the weights of version 0.1.0,
+    used for all analyses of the paper (Figs. 9 and 10); or
+  - `"paper"`: `m * n_k / N`, as printed in Eq. 5 and Fig. 4 of the paper.
+
+  The default is unchanged from version 0.1.0, so `betavolume(weights = TRUE)`
+  returns the same values as before. The `"paper"` weights are larger by the
+  factor `m * sum(n_l^2) / N^2 >= 1` and can push beta diversity above its
+  nominal maximum `d` (about one in ten random presence/absence
+  metacommunities; 2.12 for the two-species example of Fig. 4), which is why
+  they are not the default. Contributions are identical under both schemes.
 * **`disentangle_individual_contribution(weights = TRUE)` treats each unique
   composition as one unit**, as in Fig. 6 of the paper. Version 0.1.0 removed
   one row at a time, so every duplicated composition got a contribution of

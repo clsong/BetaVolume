@@ -113,12 +113,16 @@ tonum(x) = x === nothing ? NaN : Float64(x)
 
     @testset "Fig. 4: weighted embedding" begin
         fig4 = [1 0; 0 1; 0 1; 1 1; 1 1; 1 1]
-        E = preprocess(fig4; weights = true)
+        E = preprocess(fig4; weights = true, weight_scheme = :paper)
         w = [0.5, 1, 1, 1.5, 1.5, 1.5]
         @test E.points ≈ fig4 .* w
         @test E.ids == 1:6
         @test !E.transposed
-        @test betavolume(fig4; weights = true) ≈ 2 * sqrt(1.125)
+        @test betavolume(fig4; weights = true, weight_scheme = :paper) ≈ 2 * sqrt(1.125)
+        @test betavolume(fig4; weights = true, weight_scheme = :paper) > 2  # exceeds d
+        @test preprocess(fig4; weights = true).points ==
+              preprocess(fig4; weights = true, weight_scheme = :legacy).points  # default
+        @test betavolume(fig4; weights = true) ≈ 1.818275 atol = 1e-6
         L = preprocess(fig4; weights = true, weight_scheme = :legacy)
         @test L.points[:, 1] ≈ 6 .* [1, 0, 0, 3, 3, 3] ./ 14
         @test L.points ≈ fig4 .* (6 .* [1, 2, 2, 3, 3, 3] ./ 14)
@@ -289,7 +293,7 @@ end
     end
     # both schemes proportional to the multiplicity; paper weights average to one
     mr = Float64.(rand(MersenneTwister(2), 40, 4) .< 0.5)
-    P = preprocess(mr; weights = true)
+    P = preprocess(mr; weights = true, weight_scheme = :paper)
     L = preprocess(mr; weights = true, weight_scheme = :legacy)
     ratio = P.points[P.points .!= 0] ./ L.points[L.points .!= 0]
     @test all(ratio .≈ ratio[1])
@@ -652,7 +656,8 @@ end
     end
     @testset "temporal overlap" for t in ref["temporal"]
         v = quietly(() -> temporal_overlap(tomatrix(t["Z1"]), tomatrix(t["Z2"]);
-                                          oriented = t["oriented"], weights = t["weights"]))
+                                          oriented = t["oriented"], weights = t["weights"],
+                                          weight_scheme = Symbol(t["scheme"])))
         expected = tonum(t["value"])
         if isnan(expected)
             @test isnan(v)

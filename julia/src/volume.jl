@@ -68,7 +68,7 @@ end
 """
     betavolume(Z; preprocess = true, weights = false, remove_unique = false,
                method = :auto, dim_threshold = 10, compressed_angle = 1.0,
-               weight_scheme = :paper) -> Float64
+               weight_scheme = :legacy) -> Float64
 
 Geometric beta diversity β_vol of Song et al. (2025). The metacommunity matrix is
 embedded as a cloud of points (one per community or per species, whichever is more
@@ -116,7 +116,7 @@ betavolume(fig4; weights = true)  # 2√1.125
 """
 function betavolume(Z; preprocess::Bool = true, weights::Bool = false,
                     remove_unique::Bool = false, method = :auto, dim_threshold::Real = 10,
-                    compressed_angle::Real = 1.0, weight_scheme = :paper)
+                    compressed_angle::Real = 1.0, weight_scheme = :legacy)
     angle = _check_angle(compressed_angle)
     scheme = _resolve_scheme(weight_scheme)
     X = preprocess ? _preprocess(Z, weights, remove_unique, scheme).points :

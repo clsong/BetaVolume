@@ -1,5 +1,5 @@
 """
-    preprocess(Z; weights = false, remove_unique = false, weight_scheme = :paper)
+    preprocess(Z; weights = false, remove_unique = false, weight_scheme = :legacy)
         -> (points, ids, transposed)
 
 Prepare a metacommunity matrix for the geometric embedding of Song et al. (2025)
@@ -18,12 +18,17 @@ All-zero rows are dropped and each row is multiplied by a weight proportional to
 multiplicity `n_k` of its composition. With `N` non-empty rows and `m` unique
 compositions:
 
-- `weight_scheme = :paper` (Eq. 5): `w_k = m n_k / N` (weights average to one over the
-  unique compositions; a metacommunity without duplicates is unchanged);
-- `weight_scheme = :legacy` (BetaVolume ≤ 0.1.0): `w_k = N n_k / Σ_l n_l²`.
+- `weight_scheme = :legacy` (default): `w_k = N n_k / Σ_l n_l²`. The weights average to
+  one over communities. This is the normalisation used for all analyses of Song et al.
+  (2025), including Figs. 9 and 10, and in practice it keeps `β_vol` within `[0, d]`.
+- `weight_scheme = :paper`: `w_k = m n_k / N`, as printed in Eq. 5 and Fig. 4 of the
+  paper (weights average to one over unique compositions). These weights can exceed
+  one substantially, so `β_vol` can exceed its nominal maximum `d` (2.12 for the
+  two-species example of Fig. 4).
 
-Both schemes give identical relative contributions ([`contributions`](@ref)) but
-different `betavolume(...; weights = true)` values.
+Both leave a metacommunity without duplicates unchanged and give identical relative
+contributions ([`contributions`](@ref)), but different `betavolume(...; weights = true)`
+values.
 
 # Arguments
 - `Z`: an `AbstractMatrix{<:Real}` (dense, `Bool`, integer or `SparseMatrixCSC`) with
@@ -48,12 +53,12 @@ preprocess(fig4; weights = true).points   # rows scaled by 0.5, 1, 1, 1.5, 1.5, 
 ```
 """
 function preprocess(Z; weights::Bool = false, remove_unique::Bool = false,
-                    weight_scheme = :paper)
+                    weight_scheme = :legacy)
     return _preprocess(Z, weights, remove_unique, _resolve_scheme(weight_scheme))
 end
 
 """
-    preprocess_meta_composition(Z; weights = false, remove_unique = false, weight_scheme = :paper)
+    preprocess_meta_composition(Z; weights = false, remove_unique = false, weight_scheme = :legacy)
 
 Alias of [`preprocess`](@ref), with the name of the R function.
 """

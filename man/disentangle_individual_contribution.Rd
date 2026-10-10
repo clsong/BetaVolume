@@ -11,7 +11,7 @@ disentangle_individual_contribution(
   hypervolume_method,
   dim_threshold = 10,
   preprocess = TRUE,
-  weight_scheme = c("paper", "legacy"),
+  weight_scheme = c("legacy", "paper"),
   cores = getOption("BetaVolume.cores", 1L)
 )
 }
@@ -44,9 +44,10 @@ through \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}
 \code{remove_unique}). Set to \code{FALSE} only if \code{meta_composition} is already a
 preprocessed embedding (rows = points, columns = axes).}
 
-\item{weight_scheme}{Either \code{"paper"} (default, Eq. 5 of Song et al. 2025) or
-\code{"legacy"} (weights used by BetaVolume <= 0.1.0). Only used when
-\code{weights = TRUE}.}
+\item{weight_scheme}{Normalisation of the weights: \code{"legacy"} (default; the
+weights used for the analyses of Song et al. 2025) or \code{"paper"} (Eq. 5 as
+printed in the paper). See the section on the weighted embedding. Only
+used when \code{weights = TRUE}.}
 
 \item{cores}{Number of cores used to recompute the convex hulls of the
 exact method in parallel (forked processes via \code{\link[parallel:mclapply]{parallel::mclapply()}};
