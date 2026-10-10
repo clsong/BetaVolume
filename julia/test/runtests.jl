@@ -410,6 +410,27 @@ end
         @test contributions(zeros(3, 2); weights = true).values == Float64[]
     end
 
+    @testset "bounded weights" begin
+        fig4 = [1 0; 0 1; 0 1; 1 1; 1 1; 1 1]
+        @test preprocess(fig4; weights = true, weight_scheme = :bounded).points ≈
+              fig4 .* ([1, 2, 2, 3, 3, 3] ./ 3)
+        @test contributions(fig4; weights = true, weight_scheme = :bounded).values ≈
+              contributions(fig4; weights = true).values
+        md = [1 0 0; 0 1 0; 0 0 1; 1 1 0]
+        @test preprocess(md; weights = true, weight_scheme = :bounded).points == md
+        rng = MersenneTwister(51)
+        for _ in 1:300
+            d = rand(rng, 2:4)
+            comps = [Float64.(reverse(digits(k, base = 2, pad = d))) for k in 1:(2^d - 1)]
+            N = rand(rng, d:40)
+            Z = reduce(vcat, permutedims.(comps[rand(rng, 1:length(comps), N)]))
+            size(preprocess(Z).points, 2) == d || continue
+            b = betavolume(Z; weights = true, weight_scheme = :bounded)
+            @test b <= d + 1e-9
+            @test b <= betavolume(Z) + 1e-9
+        end
+    end
+
     @testset "preprocess = false (BetaVolume 0.1.0 semantics)" begin
         fig4 = [1 0; 0 1; 0 1; 1 1; 1 1; 1 1]
         X = preprocess(fig4; weights = true).points

@@ -63,7 +63,7 @@ for (i in seq_along(specs)) {
   contribs <- list()
   pre <- list()
   for (w in c(FALSE, TRUE)) {
-    schemes <- if (w) c("paper", "legacy") else "paper"
+    schemes <- if (w) c("paper", "legacy", "bounded") else "paper"
     for (scheme in schemes) {
       X <- preprocess_meta_composition(m, weights = w, weight_scheme = scheme)
       pre[[length(pre) + 1]] <- list(

@@ -22,9 +22,9 @@
 #' is removed in turn, as in Fig. 6 of the paper. The result then has one
 #' value per unique composition, named by the rows that share it (for example
 #' `"2, 3"`). The weights are computed once on the full metacommunity and are
-#' not recomputed after a composition is removed. Both weighting schemes are
+#' not recomputed after a composition is removed. All weighting schemes are
 #' proportional to the multiplicity of each composition and \eqn{C_i} is scale
-#' invariant, so `"paper"` and `"legacy"` weights give identical contributions.
+#' invariant, so all weighting schemes give identical contributions.
 #'
 #' **Sign.** With the exact convex-hull method every contribution is
 #' non-negative, because removing a point never increases the volume of a
@@ -84,7 +84,7 @@ disentangle_individual_contribution <- function(meta_composition,
                                                 hypervolume_method,
                                                 dim_threshold = 10,
                                                 preprocess = TRUE,
-                                                weight_scheme = c("legacy", "paper"),
+                                                weight_scheme = c("legacy", "paper", "bounded"),
                                                 cores = getOption("BetaVolume.cores", 1L)) {
   check_flag(preprocess, "preprocess")
   if (!is.numeric(cores) || length(cores) != 1L || is.na(cores) || cores < 1) {

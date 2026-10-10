@@ -23,7 +23,7 @@
 #' composition and are therefore embedded at the same point. With
 #' `weights = TRUE` all-zero rows are dropped and each row is multiplied by a
 #' weight proportional to the number of times \eqn{n_k} its composition
-#' occurs. Two normalisations are available, with \eqn{N} the number of
+#' occurs. Three normalisations are available, with \eqn{N} the number of
 #' non-empty communities and \eqn{m} the number of unique compositions:
 #' \describe{
 #'   \item{`"legacy"` (default)}{\eqn{w_k = N n_k / \sum_l n_l^2}{w_k = N n_k / sum(n_l^2)}.
@@ -37,13 +37,19 @@
 #'     \eqn{\beta_{vol}} can exceed its nominal maximum \eqn{d}: the Fig. 4
 #'     example gives 2.12 for two species, and about one in ten random
 #'     presence/absence metacommunities exceeds \eqn{d}.}
+#'   \item{`"bounded"`}{\eqn{w_k = n_k / \max_l n_l}{w_k = n_k / max(n_l)}:
+#'     the most frequent composition keeps weight one and every other
+#'     composition is shrunk towards the origin. Because no weight exceeds
+#'     one, the weighted hull lies inside the unweighted hull, so weighting
+#'     never increases beta diversity and \eqn{\beta_{vol} \le d} is
+#'     guaranteed for presence/absence data.}
 #' }
-#' Both leave a metacommunity without duplicates unchanged. They are
-#' proportional to each other, differing by the factor
-#' \eqn{m \sum_l n_l^2 / N^2 \ge 1}{m sum(n_l^2) / N^2 >= 1}, so they give
-#' **identical relative contributions**
+#' All three leave a metacommunity without duplicates unchanged. They are
+#' proportional to each other (all are proportional to \eqn{n_k}), so they
+#' give **identical relative contributions**
 #' ([disentangle_individual_contribution()]) but different
-#' `betavolume(weights = TRUE)` values.
+#' `betavolume(weights = TRUE)` values: `"paper"` \eqn{\ge} `"legacy"` and
+#' `"paper"` \eqn{\ge} `"bounded"`.
 #'
 #' @param meta_composition A numeric matrix (or data frame, or sparse
 #'   [Matrix::Matrix]) with communities in rows and species in columns (or the
@@ -58,9 +64,10 @@
 #'   before embedding? Default `FALSE`. (Despite the historical name, this
 #'   keeps one copy of each *unique* row/column.)
 #' @param weight_scheme Normalisation of the weights: `"legacy"` (default; the
-#'   weights used for the analyses of Song et al. 2025) or `"paper"` (Eq. 5 as
-#'   printed in the paper). See the section on the weighted embedding. Only
-#'   used when `weights = TRUE`.
+#'   weights used for the analyses of Song et al. 2025), `"paper"` (Eq. 5 as
+#'   printed in the paper) or `"bounded"` (guarantees
+#'   \eqn{\beta_{vol} \le d}{beta_vol <= d} for presence/absence data). See
+#'   the section on the weighted embedding. Only used when `weights = TRUE`.
 #'
 #' @return A numeric matrix (sparse if the input was sparse) whose rows are the
 #'   embedded points and whose columns are the axes, i.e. with
@@ -84,13 +91,14 @@
 #' colnames(fig4) <- c("A", "B")
 #' preprocess_meta_composition(fig4, weights = TRUE) # default "legacy" weights
 #' preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "paper") # Eq. 5
+#' preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "bounded")
 #'
 #' # Wide matrices are transposed so that rows are the embedded points
 #' dim(preprocess_meta_composition(t(fig4)))
 preprocess_meta_composition <- function(meta_composition,
                                         weights = FALSE,
                                         remove_unique = FALSE,
-                                        weight_scheme = c("legacy", "paper")) {
+                                        weight_scheme = c("legacy", "paper", "bounded")) {
   check_flag(weights, "weights")
   check_flag(remove_unique, "remove_unique")
   weight_scheme <- match.arg(weight_scheme)
@@ -129,7 +137,8 @@ weight_composition <- function(x, weight_scheme = "legacy") {
   m_unique <- length(groups$counts)
   w <- switch(weight_scheme,
     paper = m_unique * n_k / n_total,
-    legacy = n_total * n_k / sum(groups$counts^2)
+    legacy = n_total * n_k / sum(groups$counts^2),
+    bounded = n_k / max(groups$counts)
   )
   if (is_sparse(x)) {
     rn <- rownames(x)

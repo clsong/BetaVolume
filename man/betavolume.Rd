@@ -13,7 +13,7 @@ betavolume(
   compressed_angle = 1,
   dim_threshold = 10,
   sparsity,
-  weight_scheme = c("legacy", "paper")
+  weight_scheme = c("legacy", "paper", "bounded")
 )
 }
 \arguments{
@@ -54,9 +54,10 @@ hyper-normal approximation otherwise. Default 10.}
 automatically; kept for backward compatibility.}
 
 \item{weight_scheme}{Normalisation of the weights: \code{"legacy"} (default; the
-weights used for the analyses of Song et al. 2025) or \code{"paper"} (Eq. 5 as
-printed in the paper). See the section on the weighted embedding. Only
-used when \code{weights = TRUE}.}
+weights used for the analyses of Song et al. 2025), \code{"paper"} (Eq. 5 as
+printed in the paper) or \code{"bounded"} (guarantees
+\eqn{\beta_{vol} \le d}{beta_vol <= d} for presence/absence data). See
+the section on the weighted embedding. Only used when \code{weights = TRUE}.}
 }
 \value{
 A single non-negative number: the geometric beta diversity.

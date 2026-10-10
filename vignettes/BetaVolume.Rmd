@@ -123,7 +123,7 @@ betavolume(fig4) # duplicates ignored
 betavolume(fig4, weights = TRUE) # duplicates weighted
 ```
 
-Two normalisations of the weights are available through `weight_scheme`,
+Three normalisations of the weights are available through `weight_scheme`,
 with $N$ the number of non-empty communities and $m$ the number of unique
 compositions:
 
@@ -139,8 +139,18 @@ compositions:
 betavolume(fig4, weights = TRUE, weight_scheme = "paper") # > d = 2
 ```
 
-Both leave metacommunities without duplicates unchanged and give identical
-contributions (below), because they are proportional to each other.
+* `"bounded"`: $w_k = n_k / \max_l n_l$. The most frequent composition keeps
+  weight one and the others are shrunk towards the origin. No weight exceeds
+  one, so weighting never increases beta diversity and $\beta_{vol} \le d$ is
+  guaranteed for presence/absence data:
+
+```{r}
+betavolume(fig4, weights = TRUE, weight_scheme = "bounded")
+```
+
+All three leave metacommunities without duplicates unchanged and give
+identical contributions (below), because they are proportional to each
+other.
 
 ## Which communities matter? Contributions to beta diversity
 

@@ -97,3 +97,39 @@ test_that("legacy weights keep beta_vol within [0, d] more often than Eq. 5", {
   expect_gt(betavolume(fig4, weights = TRUE, weight_scheme = "paper"), 2)
   expect_lte(betavolume(fig4, weights = TRUE), 2)
 })
+
+test_that("bounded weights: n_k / max(n_l), never above one", {
+  w <- preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "bounded")
+  expect_equal(unname(w), fig4 * c(1, 2, 2, 3, 3, 3) / 3)
+  # no duplicates: unchanged
+  m <- rbind(c(1, 0, 0), c(0, 1, 0), c(0, 0, 1), c(1, 1, 0))
+  expect_equal(unname(preprocess_meta_composition(m, weights = TRUE, weight_scheme = "bounded")), m)
+  # proportional to the other schemes, so contributions are identical
+  expect_equal(
+    disentangle_individual_contribution(fig4, weights = TRUE, weight_scheme = "bounded"),
+    disentangle_individual_contribution(fig4, weights = TRUE)
+  )
+  # sparse input
+  sm <- Matrix::Matrix(fig4, sparse = TRUE)
+  expect_equal(
+    as.matrix(preprocess_meta_composition(sm, weights = TRUE, weight_scheme = "bounded")),
+    preprocess_meta_composition(fig4, weights = TRUE, weight_scheme = "bounded")
+  )
+})
+
+test_that("bounded weights guarantee beta_vol <= d and never increase beta", {
+  set.seed(51)
+  for (i in 1:300) {
+    d <- sample(2:4, 1)
+    comps <- all_compositions(d)[-1, , drop = FALSE]
+    p <- stats::rexp(nrow(comps))^sample(1:3, 1)
+    m <- comps[sample(nrow(comps), sample(d:40, 1), TRUE, prob = p), , drop = FALSE]
+    if (ncol(preprocess_meta_composition(m)) != d) next
+    b <- betavolume(m, weights = TRUE, weight_scheme = "bounded")
+    expect_lte(b, d + 1e-9)
+    expect_lte(b, betavolume(m) + 1e-9)
+  }
+  # abundance data: weighting never increases beta diversity
+  a <- rbind(c(2, 0.5), c(0.3, 1.7), c(0.3, 1.7), c(1, 1), c(1, 1), c(1, 1))
+  expect_lte(betavolume(a, weights = TRUE, weight_scheme = "bounded"), betavolume(a))
+})

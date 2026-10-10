@@ -25,8 +25,11 @@ compositions:
   paper (weights average to one over unique compositions). These weights can exceed
   one substantially, so `β_vol` can exceed its nominal maximum `d` (2.12 for the
   two-species example of Fig. 4).
+- `weight_scheme = :bounded`: `w_k = n_k / max_l n_l`. No weight exceeds one, so the
+  weighted hull lies inside the unweighted one: weighting never increases beta
+  diversity and `β_vol ≤ d` is guaranteed for presence/absence data.
 
-Both leave a metacommunity without duplicates unchanged and give identical relative
+All three leave a metacommunity without duplicates unchanged and give identical relative
 contributions ([`contributions`](@ref)), but different `betavolume(...; weights = true)`
 values.
 
@@ -130,6 +133,8 @@ function _weight_composition(X::M, scheme::Symbol) where {M<:DenseOrSparse}
     n_k = Float64.(g.counts[g.group])
     N = length(keep)
     m = length(g.counts)
-    w = scheme === :paper ? (m .* n_k) ./ N : (N .* n_k) ./ sum(abs2, g.counts)
+    w = scheme === :paper   ? (m .* n_k) ./ N :
+        scheme === :bounded ? n_k ./ maximum(g.counts) :
+                              (N .* n_k) ./ sum(abs2, g.counts)
     return (_scale_rows(X, w)::M, keep)
 end

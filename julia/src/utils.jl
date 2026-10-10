@@ -210,8 +210,8 @@ end
 
 function _resolve_scheme(weight_scheme)
     s = weight_scheme isa AbstractString ? Symbol(weight_scheme) : weight_scheme
-    (s === :paper || s === :legacy) && return s
-    throw(ArgumentError("`weight_scheme` must be :paper or :legacy; got $(repr(weight_scheme))."))
+    (s === :legacy || s === :paper || s === :bounded) && return s
+    throw(ArgumentError("`weight_scheme` must be :legacy, :paper or :bounded; got $(repr(weight_scheme))."))
 end
 
 _factorial(d::Integer) = prod(Float64, 1:d; init = 1.0)

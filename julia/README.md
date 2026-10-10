@@ -42,6 +42,7 @@ betavolume([1 0; 0 1; 1 1])     # metacommunity II {A}, {B}, {A,B}: 2 (the maxim
 fig4 = [1 0; 0 1; 0 1; 1 1; 1 1; 1 1]
 betavolume(fig4; weights = true)                          # 1.818 (default :legacy weights)
 betavolume(fig4; weights = true, weight_scheme = :paper)  # 2.121 (Eq. 5 as printed)
+betavolume(fig4; weights = true, weight_scheme = :bounded)  # 1.414 (≤ d guaranteed)
 
 # Fig. 6: contributions of the three unique compositions (Eq. 7)
 c = contributions(fig4; weights = true)
@@ -93,7 +94,8 @@ accepted); R's `sparsity` argument is unnecessary (sparse input is detected by t
   points plus the origin; 0 when `Σ` is singular. Scales quadratically, `β(cZ) = c²β(Z)`.
 - **Weights** (Eq. 5): composition with multiplicity `n_k`, `N` non-empty rows, `m` unique
   compositions: `N n_k / Σ n_l²` (`:legacy`, the default, used for the paper's analyses)
-  or `m n_k / N` (`:paper`, Eq. 5 as printed).
+  `m n_k / N` (`:paper`, Eq. 5 as printed) or `n_k / max n_l` (`:bounded`, guarantees
+  `β_vol ≤ d` for presence/absence data).
 - **Contributions** (Eq. 7):
   `C_i = (vol(P₀)^(1/d) − vol(P₋ᵢ)^(1/d)) / Σ_j (vol(P₀)^(1/d) − vol(P₋ⱼ)^(1/d))`.
 - **Compressed angle** (Eq. 8): `Ω(S) = 2^d P(Z ≥ 0)`, `Z ~ N(0, (S'S)⁻¹)`.
