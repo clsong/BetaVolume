@@ -1,25 +1,39 @@
 Package: BetaVolume
 Type: Package
-Title: A geometric measure of beta diversity in metacommunities
-Version: 0.1.0
-Authors@R: 
+Title: Geometric (Hypervolume) Measures of Beta Diversity
+Version: 0.2.0
+Authors@R:
     person("Chuliang", "Song", , "clsong.ecology@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7490-8626"))
-Description: This package provides a new measure of beta diversity based on the geometric embedding of metacommunities. 
+Description: Implements the geometric approach to beta diversity of Song et
+    al. (2025) <doi:10.1002/ecm.70008>. A metacommunity matrix is embedded as
+    a cloud of points in a hyper-dimensional space and beta diversity is the
+    rescaled hypervolume of the convex hull spanned by the points and the
+    origin. Provides exact (convex hull) and fast approximate (hyper-normal)
+    estimators, weighted embeddings for duplicated presence/absence
+    compositions, community- and species-specific contributions, corrections
+    for species similarity and functional complementarity, and temporal
+    change of beta diversity as hypervolume overlap.
 License: MIT + file LICENSE
+URL: https://github.com/clsong/BetaVolume
+BugReports: https://github.com/clsong/BetaVolume/issues
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
-Imports: 
-   magrittr,
-   dplyr,
-   tidyr,
-   geometry,
-   tibble,
-   rlang,
-   stats,
-   purrr,
-   mvtnorm,
-   Matrix
-Depends: 
-    R (>= 2.10)
+Depends:
+    R (>= 3.5.0)
+Imports:
+    geometry,
+    magrittr,
+    Matrix,
+    methods,
+    mvtnorm,
+    parallel,
+    stats
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1
+Roxygen: list(markdown = TRUE)

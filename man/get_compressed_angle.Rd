@@ -2,16 +2,96 @@
 % Please edit documentation in R/get_compressed_angle.R
 \name{get_compressed_angle}
 \alias{get_compressed_angle}
-\title{Calculate how much the original hypervolume is changed by the similarity matrix}
+\title{Hypervolume rescaling induced by species similarity or complementarity}
 \usage{
-get_compressed_angle(similarity_matrix)
+get_compressed_angle(similarity_matrix, releps = 1e-04, maxpts = 1e+06)
 }
 \arguments{
-\item{similarity_matrix}{a matrix denote the level of species similarity or functional complementarity}
+\item{similarity_matrix}{A square numeric matrix \eqn{S} whose entry
+\eqn{s_{ij}} gives how similar species \eqn{i} is to species \eqn{j}
+(1 on the diagonal; 0 = totally dissimilar, 1 = totally similar; negative
+values encode functional complementarity).}
+
+\item{releps}{Relative error tolerance of the numerical integration (used
+only when the dimension exceeds 3).}
+
+\item{maxpts}{Maximum number of function evaluations of the numerical
+integration (used only when the dimension exceeds 3).}
 }
 \value{
-the size of the similarity angle
+The factor \eqn{\Omega(S)^{1/d}} (a non-negative number; 1 for the
+identity matrix, 0 for a singular matrix). For \eqn{d > 3} the estimated
+absolute error of \eqn{\Omega(S)} is attached as attribute \code{"error"}.
 }
 \description{
-Calculate how much the original hypervolume is changed by the similarity matrix
+Species similarity (or functional complementarity) is a linear
+transformation of the axes of the embedding space: with a similarity matrix
+\eqn{S} the axis of species \eqn{j} points along the \eqn{j}-th column of
+\eqn{S} instead of along the \eqn{j}-th unit vector (Song et al. 2025,
+Fig. 7). The hypervolume is then rescaled by the normalised solid angle of
+the cone spanned by the transformed axes (Eq. 8),
+\deqn{\Omega(S) = \frac{2^d\,|\det S|}{(2\pi)^{d/2}}
+  \int_{x \ge 0} e^{-\frac{1}{2} x^\top S^\top S x}\, dx
+  = 2^d\; \Pr\left(Z \ge 0\right),\quad Z \sim \mathcal{N}\left(0, (S^\top S)^{-1}\right),}{
+  Omega(S) = 2^d * P(Z >= 0), Z ~ N(0, (S'S)^-1),}
+and beta diversity becomes
+\eqn{\beta_{vol} = d\,(\Omega(S)\,\mathrm{vol}(P))^{1/d} = \Omega(S)^{1/d} \times d\,\mathrm{vol}(P)^{1/d}}{beta_vol = d (Omega(S) vol(P))^(1/d) = Omega(S)^(1/d) * d vol(P)^(1/d)}
+(Eq. 9). This function returns the multiplicative factor
+\eqn{\Omega(S)^{1/d}}, to be passed to the \code{compressed_angle} argument of
+\code{\link[=betavolume]{betavolume()}}.
+}
+\details{
+\itemize{
+\item \eqn{S = I} (totally dissimilar species): \eqn{\Omega = 1}, beta
+diversity is unchanged.
+\item Positive off-diagonal similarities shrink the hypervolume
+(\eqn{\Omega < 1}); if all species are totally similar (\eqn{S} a matrix
+of ones) the axes collapse and \eqn{\Omega = 0}.
+\item Negative off-diagonal entries encode functional complementarity and
+expand the hypervolume (\eqn{\Omega > 1}).
+}
+\eqn{S} need not be symmetric. Following Eq. 8, the transformed axes are the
+columns of \eqn{S}.
+
+For \eqn{d \le 3}{d <= 3} the orthant probability has a closed form and the result
+is exact. For \eqn{d > 3} it is estimated with the randomised quasi-Monte
+Carlo algorithm of Genz and Bretz (\code{\link[mvtnorm:pmvnorm]{mvtnorm::pmvnorm()}}) with a \emph{relative}
+error tolerance (\code{releps}). The orthant probability is of order \eqn{2^{-d}},
+so the absolute tolerance used by BetaVolume 0.1.0 (0.001) was larger than
+the quantity itself for ten or more species. Call \code{\link[=set.seed]{set.seed()}} first for
+reproducible results when \eqn{d > 3}.
+
+The embedding dimension of the similarity transformation is the number of
+species, so this correction is meant for metacommunities with at least as
+many communities as species (species are the axes of the embedding).
+}
+\examples{
+get_compressed_angle(diag(2)) # 1: dissimilar species
+get_compressed_angle(matrix(1, 2, 2)) # 0: identical species
+
+# Fig. 7C: somewhat similar species shrink the hypervolume
+S <- matrix(c(1, 0.5, 0.5, 1), 2, 2)
+get_compressed_angle(S)
+
+# Fig. 7D: functional complementarity expands it
+get_compressed_angle(matrix(c(1, -0.5, -0.5, 1), 2, 2))
+
+# Use the factor in betavolume()
+meta <- rbind(c(1, 0), c(0, 1), c(1, 1))
+betavolume(meta, compressed_angle = get_compressed_angle(S))
+}
+\references{
+Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., &
+Gonzalez, A. (2025). A geometric approach to beta diversity. \emph{Ecological
+Monographs}, 95(1), e70008. \doi{10.1002/ecm.70008}
+
+Song, C., Rohr, R. P., & Saavedra, S. (2018). A guideline to study the
+feasibility domain of multi-trophic and changing ecological communities.
+\emph{Journal of Theoretical Biology}, 450, 30-36. \doi{10.1016/j.jtbi.2018.04.030}
+
+Genz, A., & Bretz, F. (2009). \emph{Computation of Multivariate Normal and t
+Probabilities}. Springer. \doi{10.1007/978-3-642-01689-9}
+}
+\seealso{
+\code{\link[=betavolume]{betavolume()}}
 }

@@ -1,0 +1,268 @@
+---
+title: "Geometric beta diversity with BetaVolume"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Geometric beta diversity with BetaVolume}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4
+)
+```
+
+```{r setup}
+library(BetaVolume)
+```
+
+This vignette walks through the geometric approach to beta diversity of
+Song et al. (2025, *Ecological Monographs* 95:e70008,
+<https://doi.org/10.1002/ecm.70008>) and reproduces the worked examples of the
+paper with BetaVolume.
+
+## The idea: beta diversity as a hypervolume
+
+Consider two species, A and B. Metacommunity I has a community with only A
+and a community with only B. Metacommunity II has, in addition, a community
+with both species (Fig. 1 of the paper). Classic measures say that
+metacommunity I is *more* diverse: for Whittaker's multiplicative beta,
+$\beta = \gamma / \bar\alpha$ is $2/1 = 2$ for I but $2/(4/3) = 1.5$ for II.
+Adding a distinct, species-rich community *decreases* beta diversity.
+
+The geometric approach instead writes the metacommunity as a matrix, with
+communities in rows and species in columns:
+
+```{r}
+meta_I <- rbind(c(1, 0), c(0, 1))
+meta_II <- rbind(c(1, 0), c(0, 1), c(1, 1))
+colnames(meta_I) <- colnames(meta_II) <- c("A", "B")
+meta_II
+```
+
+Each row is a point in a space with one axis per species. Together with the
+origin (an empty community must not change beta diversity), the points span a
+convex polytope $P$. For metacommunity I this is a triangle of area 1/2. For
+metacommunity II it is the unit square, area 1. Beta diversity is the rescaled
+hypervolume
+
+$$\beta_{vol} = d \times \mathrm{vol}(P)^{1/d}, \qquad d = \min(\gamma, N),$$
+
+where $\gamma$ is the number of species and $N$ the number of communities. It
+is an effective number of communities between 0 (all communities identical)
+and $d$:
+
+```{r}
+betavolume(meta_I) # 2 * sqrt(1/2)
+betavolume(meta_II) # 2 * sqrt(1)
+```
+
+```{r fig1, echo = FALSE, fig.height = 3}
+op <- par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+for (k in 1:2) {
+  m <- list(meta_I, meta_II)[[k]]
+  pts <- rbind(m, 0)
+  hull <- chull(pts)
+  plot(pts, xlim = c(-0.1, 1.2), ylim = c(-0.1, 1.2), asp = 1, pch = 19,
+       col = c(rep("steelblue", nrow(m)), "firebrick"),
+       xlab = "Species A", ylab = "Species B",
+       main = sprintf("Metacommunity %s: beta = %.2f", c("I", "II")[k], betavolume(m)))
+  polygon(pts[hull, ], col = adjustcolor("forestgreen", 0.3), border = "forestgreen")
+}
+par(op)
+```
+
+The matrix may be given either way round. The smaller dimension always
+defines the axes, and `betavolume(t(meta_II))` is identical.
+
+### All metacommunities with three species
+
+With three species there are $2^3 - 1 = 7$ non-empty compositions. Below we
+compute $\beta_{vol}$ for every metacommunity built from a subset of these
+compositions (cf. Fig. 2 of the paper). Beta diversity increases, sublinearly,
+with the number of unique compositions and reaches its maximum, 3, only when
+all seven are present. At a given number of compositions, the most distinct
+compositions give the highest beta diversity.
+
+```{r fig2}
+comps <- as.matrix(expand.grid(A = 0:1, B = 0:1, C = 0:1))[-1, ]
+subsets <- unlist(lapply(1:7, function(k) combn(7, k, simplify = FALSE)),
+                  recursive = FALSE)
+beta <- vapply(subsets, function(s) {
+  # repeat rows so that N >= gamma: duplicated compositions do not change P
+  betavolume(comps[rep(s, length.out = max(3, length(s))), , drop = FALSE])
+}, numeric(1))
+n_unique <- lengths(subsets)
+plot(jitter(n_unique, 0.3), beta, pch = 19, col = adjustcolor("steelblue", 0.4),
+     xlab = "Number of unique community compositions",
+     ylab = expression(beta[vol]))
+tapply(beta, n_unique, max)
+```
+
+## Presence/absence data: weighting duplicated compositions
+
+With presence/absence data many communities share the same composition and
+map to the same point, so the plain hypervolume ignores how often each
+composition occurs. With `weights = TRUE`, BetaVolume uses the weighted
+embedding of Eq. 5 of the paper. Each unique composition $k$ that occurs
+$n_k$ times among $N$ communities is scaled by $m\,n_k/N$, where $m$ is the
+number of unique compositions. This is the example of Fig. 4:
+
+```{r}
+fig4 <- rbind(
+  c(1, 0),
+  c(0, 1), c(0, 1),
+  c(1, 1), c(1, 1), c(1, 1)
+)
+colnames(fig4) <- c("A", "B")
+preprocess_meta_composition(fig4, weights = TRUE)
+betavolume(fig4) # duplicates ignored
+betavolume(fig4, weights = TRUE) # duplicates weighted
+```
+
+The weights average to one over the unique compositions, so metacommunities
+without duplicates are unaffected.
+
+**Note for users of BetaVolume 0.1.0.** Older versions used the weights
+$N n_k / \sum_l n_l^2$, which are proportional to (but smaller than) the
+weights of Eq. 5. They give the same contributions (below) but smaller
+`betavolume(weights = TRUE)` values. Use `weight_scheme = "legacy"` to
+reproduce old results:
+
+```{r}
+betavolume(fig4, weights = TRUE, weight_scheme = "legacy")
+```
+
+## Which communities matter? Contributions to beta diversity
+
+The contribution of a community is the normalised loss of beta diversity when
+it is removed (Eq. 7):
+
+$$C_i = \frac{\mathrm{vol}(P_0)^{1/d} - \mathrm{vol}(P_{\setminus i})^{1/d}}
+{\sum_j \left(\mathrm{vol}(P_0)^{1/d} - \mathrm{vol}(P_{\setminus j})^{1/d}\right)}.$$
+
+For the weighted metacommunity of Fig. 4 we recover the values of Fig. 6
+(0.16, 0.37 and 0.47). With `weights = TRUE`, each unique composition is
+one unit, labelled by the communities that share it:
+
+```{r}
+round(disentangle_individual_contribution(fig4, weights = TRUE), 3)
+```
+
+With the exact method, contributions are never negative: only communities on
+the boundary of the hull contribute. In the example data set (37 species in
+10 plots of A. H. Gentry's forest transect data) the plots are the axes, so
+the contributions are those of species:
+
+```{r}
+dim(example_meta_composition)
+contrib <- disentangle_individual_contribution(example_meta_composition)
+round(head(sort(contrib, decreasing = TRUE), 5), 3)
+sum(contrib > 0) # species on the boundary of the hull
+```
+
+With `weights = TRUE`, species with identical occurrence patterns are merged
+into one weighted point and receive a single, joint contribution, labelled by
+all the species that share it.
+
+## Species similarity and functional complementarity
+
+Following Leinster & Cobbold (2012), a similarity matrix $S$ ($s_{ij} = 0$:
+totally dissimilar, $s_{ij} = 1$: identical) turns the orthogonal species axes
+into the columns of $S$. The hypervolume is then rescaled by the normalised
+solid angle $\Omega(S)$ of the cone spanned by the new axes (Eqs. 8 and 9).
+`get_compressed_angle()` returns the factor $\Omega(S)^{1/d}$ to pass to
+`betavolume()`:
+
+```{r}
+S_similar <- matrix(c(1, 0.5, 0.5, 1), 2) # Fig. 7C
+S_complementary <- matrix(c(1, -0.5, -0.5, 1), 2) # Fig. 7D
+
+get_compressed_angle(diag(2)) # dissimilar species: unchanged
+get_compressed_angle(matrix(1, 2, 2)) # identical species: no beta diversity
+get_compressed_angle(S_similar) # similarity shrinks
+get_compressed_angle(S_complementary) # complementarity expands
+
+betavolume(meta_II, compressed_angle = get_compressed_angle(S_similar))
+```
+
+For up to three species the solid angle has a closed form. Beyond that it is
+an orthant probability of a multivariate normal distribution, estimated by
+quasi-Monte Carlo (call `set.seed()` for reproducibility).
+
+## Temporal change as hypervolume overlap
+
+The change of a metacommunity from time $t$ to $t+1$ is measured by the
+overlap of the two embeddings (Eq. 6):
+$\beta_{t\to t+1} = \left(\mathrm{vol}(P_{t+1}\cap P_t)/\mathrm{vol}(P_t)\right)^{1/d}$.
+This is the example of Fig. 5:
+
+```{r}
+t0 <- rbind(c(0, 1), c(1, 1)) # community 1 = {B}, community 2 = {A, B}
+t1 <- rbind(c(0, 1), c(1, 0)) # community 2 loses B: asynchronous change
+t2 <- rbind(c(1, 0), c(0, 1)) # the communities swap: synchronous change
+
+beta_temporal_overlap(t0, t1)
+beta_temporal_overlap(t1, t2) # identical shapes
+beta_temporal_overlap(t1, t2, oriented = TRUE) # but opposite orientation
+```
+
+With `oriented = TRUE` the embedding is oriented from the origin to community
+1, to community 2, and so on. Opposite orientations reveal synchronous changes
+(values above 1) that the unoriented overlap cannot see. The orientation is
+defined when each embedding is a simplex ($d$ communities in $d$
+dimensions).
+
+## Large metacommunities
+
+Exact convex hulls become expensive beyond roughly 10 to 15 dimensions. By
+default, `betavolume()` switches to the hyper-normal approximation when the
+embedding dimension exceeds `dim_threshold = 10`:
+
+$$\beta \approx 4\, d\, \det(\Sigma)^{1/d},$$
+
+where $\Sigma$ is the covariance matrix of the embedded points (including
+the origin). The constant $4 = 1/\mathrm{Var}(\mathrm{Bernoulli}(1/2))$ puts it
+on the scale of $\beta_{vol}$. A presence/absence metacommunity containing all
+$2^d$ compositions gets $\beta \approx d$:
+
+```{r}
+all_10 <- as.matrix(expand.grid(rep(list(0:1), 10)))
+betavolume(all_10, hypervolume_method = "hyper_normal")
+```
+
+The approximation handles thousands of species or sites and accepts sparse
+matrices from the **Matrix** package without densifying them:
+
+```{r}
+set.seed(1)
+big <- Matrix::rsparsematrix(5000, 300, density = 0.02,
+                             rand.x = function(n) rep(1, n))
+system.time(b <- betavolume(big))
+b
+```
+
+Note that the hyper-normal estimator scales like a variance: multiplying
+abundances by $c$ multiplies it by $c^2$, whereas $\beta_{vol}$ is multiplied
+by $c$. Compare metacommunities with a single method and the same
+normalisation of abundances.
+
+## Julia
+
+The `julia/` folder of the GitHub repository contains **BetaVolume.jl**, a
+Julia implementation of the same functions, cross-validated against this
+package, for very large analyses.
+
+## References
+
+Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., & Gonzalez, A.
+(2025). A geometric approach to beta diversity. *Ecological Monographs*,
+95(1), e70008. <https://doi.org/10.1002/ecm.70008>
+
+Leinster, T., & Cobbold, C. A. (2012). Measuring diversity: the importance of
+species similarity. *Ecology*, 93(3), 477–489.
+<https://doi.org/10.1890/10-2402.1>

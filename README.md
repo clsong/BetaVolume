@@ -3,71 +3,140 @@
 
 # BetaVolume <img src="man/figures/logo_2.png" align="right" height="137" />
 
-The goal of BetaVolume is to provides a new measure of beta diversity
-based on the geometric embedding of metacommunities.
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/clsong/BetaVolume/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/clsong/BetaVolume/actions/workflows/R-CMD-check.yaml)
+[![Julia](https://github.com/clsong/BetaVolume/actions/workflows/julia.yaml/badge.svg)](https://github.com/clsong/BetaVolume/actions/workflows/julia.yaml)
+<!-- badges: end -->
+
+BetaVolume implements the **geometric approach to beta diversity** of
+[Song et al. (2025, *Ecological
+Monographs*)](https://doi.org/10.1002/ecm.70008). A metacommunity matrix
+(communities × species) is embedded as a cloud of points in a
+hyper-dimensional space. Beta diversity is the rescaled hypervolume of
+the convex hull spanned by the points and the origin:
+
+$$\beta_{vol} = d \times \mathrm{vol}(P)^{1/d}, \qquad d = \min(\gamma, N).$$
+
+$\beta_{vol}$ is an effective number of communities between 0 (all
+communities identical) and $d$. Unlike classic measures, adding a
+distinct, species-rich community to a metacommunity *increases* beta
+diversity, so the measure accounts for species associations and
+non-additivity.
 
 ## Installation
 
-You can install the development version of BetaVolume from
-[GitHub](https://github.com/) with:
-
 ``` r
-# install.packages("devtools")
-devtools::install_github("clsong/betavolume")
+# install.packages("pak")
+pak::pak("clsong/BetaVolume")
+```
+
+A Julia implementation with the same functions lives in
+[`julia/`](julia/):
+
+``` julia
+using Pkg
+Pkg.add(url = "https://github.com/clsong/BetaVolume", subdir = "julia")
 ```
 
 ## Example
 
-Here we show a basic example of this package.
-
 ``` r
 library(BetaVolume)
-library(tidyverse)
+
+# Fig. 1 of the paper: two species, A and B
+meta_I <- rbind(c(1, 0), c(0, 1)) # communities {A} and {B}
+meta_II <- rbind(c(1, 0), c(0, 1), c(1, 1)) # ... plus {A, B}
+betavolume(meta_I)
+#> [1] 1.414214
+betavolume(meta_II) # adding a distinct, species-rich community increases beta
+#> [1] 2
 ```
 
-We analyze an empirical metacommunity collected collected by A. H.
-Gentry and numerous additional collectors. This metacommunity has 37
-species and 10 patches.
+We now analyse an empirical metacommunity from A. H. Gentry’s forest
+transect data, with 37 species recorded in 10 plots:
 
 ``` r
-head(example_meta_composition)
-#>                                       1 2 3 4 5 6 7 8 9 10
-#> ANACARDIACEAE_BUCHANANIA_RETICULATA   0 0 0 0 0 0 0 1 0  0
-#> BURSERACEAE_CANARIUM_SUBULATUM        0 0 0 0 0 0 1 0 0  0
-#> CLUSIACEAE_BAUHINIA_MALABARICA        0 0 0 0 1 0 0 0 0  0
-#> CLUSIACEAE_CRATOXYLON_COCHINCHINENSIS 0 1 0 1 0 0 0 0 1  0
-#> CLUSIACEAE_DALBERGIA_CULTRATA         0 0 0 1 0 0 0 0 0  0
-#> CLUSIACEAE_DALBERGIA_NIGRESCENS       0 0 0 0 0 0 0 1 0  0
+dim(example_meta_composition)
+#> [1] 37 10
+betavolume(example_meta_composition)
+#> [1] 4.478178
 ```
 
-As this data only contains information of presence/absence of species,
-we adopt the duplication schemes to compute hypervolume beta diversity.
-The hypervolume beta diversity of this metacommunity is
+With presence/absence data, duplicated compositions can be weighted by
+their frequency (Eq. 5 of the paper):
 
 ``` r
-betavolume(example_meta_composition, weights = T)
-#> [1] 2.461931
+betavolume(example_meta_composition, weights = TRUE)
+#> [1] 4.012102
 ```
 
-We can disentangle the individual contribution of a patch to the overall
-beta diversity. We find that
+Which species contribute the most to beta diversity?
 
 ``` r
-disentangle_individual_contribution(example_meta_composition, weights = T) %>% 
-  enframe(name = "species", value = 'contribution') %>% 
-  arrange(-contribution)
-#> # A tibble: 37 × 2
-#>    species contribution
-#>      <int>        <dbl>
-#>  1      10       0.211 
-#>  2      21       0.140 
-#>  3      29       0.122 
-#>  4      22       0.111 
-#>  5       9       0.0935
-#>  6      12       0.0906
-#>  7      30       0.0745
-#>  8      17       0.0396
-#>  9      27       0.0205
-#> 10       4       0.0199
-#> # … with 27 more rows
+contribution <- disentangle_individual_contribution(example_meta_composition)
+round(head(sort(contribution, decreasing = TRUE)), 3)
+#>            DIPTEROCARPACEAE_SHOREA_OBTUSA 
+#>                                     0.138 
+#>          FABACEAE_PTEROCARPUS_MAGNICARPUS 
+#>                                     0.120 
+#>          FABACEAE_PTEROCARPUS_MACROCARPUS 
+#>                                     0.084 
+#>            RUBIACEAE_GARDENIA_SOOTEPENSIS 
+#>                                     0.083 
+#> DIPTEROCARPACEAE_DIPTEROCARPUS_INTRICATUS 
+#>                                     0.081 
+#>              EBENACEAE_DIOSPYROS_CASTANEA 
+#>                                     0.074
 ```
+
+## What is in the package
+
+| Function                                | Purpose                                                                                                               | Paper            |
+|:----------------------------------------|:----------------------------------------------------------------------------------------------------------------------|:-----------------|
+| `betavolume()`                          | Geometric beta diversity: exact convex hull (`"deterministic"`) or fast hyper-normal approximation (`"hyper_normal"`) | Eq. 4, Box 1     |
+| `preprocess_meta_composition()`         | Orientation of the matrix and weighted embedding of duplicated presence/absence compositions                          | Eq. 5, Fig. 4    |
+| `disentangle_individual_contribution()` | Contribution of each community (or species) to beta diversity                                                         | Eq. 7, Fig. 6    |
+| `get_compressed_angle()`                | Rescaling by species similarity or functional complementarity                                                         | Eqs. 8–9, Fig. 7 |
+| `beta_temporal_overlap()`               | Temporal change of beta diversity as (oriented) hypervolume overlap                                                   | Eq. 6, Fig. 5    |
+
+The exact method is practical up to about 10–15 dimensions; by default
+`betavolume()` switches to the hyper-normal approximation
+($4\,d\,\det(\Sigma)^{1/d}$) above `dim_threshold = 10`. The
+approximation scales to thousands of species or sites and accepts sparse
+matrices.
+
+See `vignette("BetaVolume")` for a guided tour that reproduces the
+worked examples of the paper.
+
+## Performance
+
+Version 0.2.0 removes the dependency on dplyr/tidyr/tibble/purrr and
+replaces the per-point recomputations of version 0.1.0 with faster
+algorithms. Median timings on one core (`benchmarks/benchmark_r.R`):
+
+| task                                                              |  v0.1.0 |  v0.2.0 | speed-up |
+|:------------------------------------------------------------------|--------:|--------:|---------:|
+| `betavolume()`, example data, weights                             | 0.087 s | 0.021 s |       4× |
+| `disentangle_individual_contribution()`, 60 × 6 binary (exact)    |  0.35 s | 0.074 s |       5× |
+| `disentangle_individual_contribution()`, 1000 × 50 (hyper-normal) |  2.35 s | 0.004 s |    ~600× |
+
+For the exact method most of the time is spent computing convex hulls in
+Qhull. Set the `cores` argument to recompute them in parallel, or use
+the Julia package for very large analyses.
+
+## Changes in version 0.2.0
+
+Version 0.2.0 fixes several bugs of version 0.1.0 and aligns the package
+with the published equations. See [NEWS.md](NEWS.md) for details. In
+particular, `betavolume(weights = TRUE)` now uses the weights of Eq. 5
+(`weight_scheme = "legacy"` reproduces older results), and the exact
+method no longer silently returns 0 on degenerate presence/absence data.
+
+## Citation
+
+If you use BetaVolume, please cite (see also `citation("BetaVolume")`):
+
+Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., &
+Gonzalez, A. (2025). A geometric approach to beta diversity. *Ecological
+Monographs*, 95(1), e70008. <https://doi.org/10.1002/ecm.70008>

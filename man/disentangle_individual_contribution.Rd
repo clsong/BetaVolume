@@ -2,24 +2,132 @@
 % Please edit documentation in R/disentangle_individual_contribution.R
 \name{disentangle_individual_contribution}
 \alias{disentangle_individual_contribution}
-\title{Compute the patch-specific contribution to beta diversity}
+\title{Contribution of each community (or species) to geometric beta diversity}
 \usage{
 disentangle_individual_contribution(
   meta_composition,
-  weights = F,
-  remove_unique = F
+  weights = FALSE,
+  remove_unique = FALSE,
+  hypervolume_method,
+  dim_threshold = 10,
+  preprocess = TRUE,
+  weight_scheme = c("paper", "legacy"),
+  cores = getOption("BetaVolume.cores", 1L)
 )
 }
 \arguments{
-\item{meta_composition}{metacommunity composition}
+\item{meta_composition}{A numeric matrix (or data frame, or sparse
+\link[Matrix:Matrix]{Matrix::Matrix}) with communities in rows and species in columns (or the
+reverse -- orientation does not matter). Entries are presence/absence
+(0/1) or any other non-negative measure of species importance such as
+abundance or biomass.}
 
-\item{weights}{whether non-unique compositions should be weighted}
+\item{weights}{Logical. Apply the weighted embedding of duplicated
+compositions (Eq. 5 of Song et al. 2025; see the section "Weighted
+embedding of duplicated compositions" in \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}})?
+Default \code{FALSE}.}
 
-\item{remove_unique}{whether unique compositions should be removed}
+\item{remove_unique}{Logical. Remove duplicated rows and duplicated columns
+before embedding? Default \code{FALSE}. (Despite the historical name, this
+keeps one copy of each \emph{unique} row/column.)}
+
+\item{hypervolume_method}{\code{"deterministic"} (exact convex hull; \code{"exact"}
+is accepted as an alias) or \code{"hyper_normal"} (fast ellipsoid
+approximation). If missing, chosen from \code{dim_threshold}.}
+
+\item{dim_threshold}{When \code{hypervolume_method} is missing, the exact method
+is used if the embedding dimension is at most \code{dim_threshold} and the
+hyper-normal approximation otherwise. Default 10.}
+
+\item{preprocess}{Logical. If \code{TRUE} (default), \code{meta_composition} is passed
+through \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}} (orientation, \code{weights},
+\code{remove_unique}). Set to \code{FALSE} only if \code{meta_composition} is already a
+preprocessed embedding (rows = points, columns = axes).}
+
+\item{weight_scheme}{Either \code{"paper"} (default, Eq. 5 of Song et al. 2025) or
+\code{"legacy"} (weights used by BetaVolume <= 0.1.0). Only used when
+\code{weights = TRUE}.}
+
+\item{cores}{Number of cores used to recompute the convex hulls of the
+exact method in parallel (forked processes via \code{\link[parallel:mclapply]{parallel::mclapply()}};
+ignored on Windows). Defaults to \code{getOption("BetaVolume.cores", 1L)}.}
 }
 \value{
-the value of the geometric measure of beta_diversity
+A named numeric vector of contributions summing to one, with one
+value per embedded point (row of
+\code{preprocess_meta_composition(meta_composition, ...)}), or one value per
+unique composition when \code{weights = TRUE}. Names are the row names of the
+embedding (community or species names, or their indices).
 }
 \description{
-Compute the patch-specific contribution to beta diversity
+Quantifies how much each embedded point -- a community or a species,
+whichever is the more numerous dimension of the metacommunity matrix --
+contributes to the geometric beta diversity, as the normalised loss of
+beta diversity when that point is removed (Song et al. 2025, Eq. 7 and
+Fig. 6):
+\deqn{C_i = \frac{\mathrm{vol}(P_0)^{1/d} - \mathrm{vol}(P_{\setminus i})^{1/d}}
+  {\sum_j \left(\mathrm{vol}(P_0)^{1/d} - \mathrm{vol}(P_{\setminus j})^{1/d}\right)},}{
+  C_i = (vol(P_0)^(1/d) - vol(P_-i)^(1/d)) / sum_j (vol(P_0)^(1/d) - vol(P_-j)^(1/d)),}
+where \eqn{P_0} is the geometric object of the full metacommunity and
+\eqn{P_{\setminus i}}{P_-i} the object without point \eqn{i}.
+}
+\details{
+\strong{Unit of removal.} Without weighting (\code{weights = FALSE}) each row of the
+embedding is removed in turn. If a composition occurs several times,
+removing one copy leaves the geometric object unchanged, so each copy
+contributes 0 (only communities with a unique composition can contribute).
+With the weighted embedding (\code{weights = TRUE}), duplicated compositions are
+merged into a single weighted point (Eq. 5), and each \emph{unique composition}
+is removed in turn, as in Fig. 6 of the paper. The result then has one
+value per unique composition, named by the rows that share it (for example
+\code{"2, 3"}). The weights are computed once on the full metacommunity and are
+not recomputed after a composition is removed. Both weighting schemes are
+proportional to the multiplicity of each composition and \eqn{C_i} is scale
+invariant, so \code{"paper"} and \code{"legacy"} weights give identical contributions.
+
+\strong{Sign.} With the exact convex-hull method every contribution is
+non-negative, because removing a point never increases the volume of a
+convex hull. Only vertices of the hull contribute; points inside the hull
+contribute 0. With the \code{"hyper_normal"} approximation, removing a point close
+to the centroid can \emph{increase} the determinant of the covariance matrix, so
+small negative contributions are possible.
+
+If the embedding is degenerate (zero beta diversity) the contributions are
+undefined and \code{NA} is returned with a warning. If beta diversity is positive
+but no single point is essential (every vertex of the hull occurs more than
+once and \code{weights = FALSE}), all contributions are 0 and a warning suggests
+\code{weights = TRUE}.
+}
+\section{Performance}{
+
+A naive implementation recomputes one convex hull per point. Here, for the
+exact method only the vertices of the hull that occur once are recomputed.
+For the hyper-normal method all leave-one-out determinants are obtained at
+once from a low-rank downdate of the covariance matrix (matrix determinant
+lemma) at the cost of a single Cholesky factorisation, which is two to
+three orders of magnitude faster than recomputing every determinant. The
+exact hulls can also be recomputed in parallel with \code{cores > 1}.
+}
+
+\examples{
+# Fig. 4 and 6 of Song et al. (2025): six communities, three unique
+# compositions {A}, {B} (twice) and {A, B} (three times)
+fig4 <- rbind(c(1, 0), c(0, 1), c(0, 1), c(1, 1), c(1, 1), c(1, 1))
+round(disentangle_individual_contribution(fig4, weights = TRUE), 2)
+
+# The same result from the weighted matrix shown in Fig. 6A
+fig6 <- rbind(c(0.5, 0), c(0, 1), c(1.5, 1.5))
+round(disentangle_individual_contribution(fig6), 2)
+
+# Contributions of the 37 species of the example metacommunity
+contrib <- disentangle_individual_contribution(example_meta_composition)
+head(sort(contrib, decreasing = TRUE))
+}
+\references{
+Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., &
+Gonzalez, A. (2025). A geometric approach to beta diversity. \emph{Ecological
+Monographs}, 95(1), e70008. \doi{10.1002/ecm.70008}
+}
+\seealso{
+\code{\link[=betavolume]{betavolume()}}
 }

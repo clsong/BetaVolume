@@ -2,3 +2,10 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.github$
+^julia$
+^benchmarks$
+^man/figures/logo\.pdf$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

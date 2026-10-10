@@ -2,42 +2,151 @@
 % Please edit documentation in R/betavolume.R
 \name{betavolume}
 \alias{betavolume}
-\title{Load a Matrix corresponds to metacommunity composition}
+\title{Geometric (hypervolume) beta diversity of a metacommunity}
 \usage{
 betavolume(
   meta_composition,
-  preprocess = T,
-  weights = F,
-  remove_unique = F,
+  preprocess = TRUE,
+  weights = FALSE,
+  remove_unique = FALSE,
   hypervolume_method,
   compressed_angle = 1,
   dim_threshold = 10,
-  sparsity = F
+  sparsity,
+  weight_scheme = c("paper", "legacy")
 )
 }
 \arguments{
-\item{meta_composition}{metacommunity composition}
+\item{meta_composition}{A numeric matrix (or data frame, or sparse
+\link[Matrix:Matrix]{Matrix::Matrix}) with communities in rows and species in columns (or the
+reverse -- orientation does not matter). Entries are presence/absence
+(0/1) or any other non-negative measure of species importance such as
+abundance or biomass.}
 
-\item{preprocess}{Whether weights and remove_unique should be executed}
+\item{preprocess}{Logical. If \code{TRUE} (default), \code{meta_composition} is passed
+through \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}} (orientation, \code{weights},
+\code{remove_unique}). Set to \code{FALSE} only if \code{meta_composition} is already a
+preprocessed embedding (rows = points, columns = axes).}
 
-\item{weights}{whether non-unique compositions should be weighted}
+\item{weights}{Logical. Apply the weighted embedding of duplicated
+compositions (Eq. 5 of Song et al. 2025; see the section "Weighted
+embedding of duplicated compositions" in \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}})?
+Default \code{FALSE}.}
 
-\item{remove_unique}{whether unique compositions should be removed}
+\item{remove_unique}{Logical. Remove duplicated rows and duplicated columns
+before embedding? Default \code{FALSE}. (Despite the historical name, this
+keeps one copy of each \emph{unique} row/column.)}
 
-\item{hypervolume_method}{which method to estimate the hypervolume}
+\item{hypervolume_method}{\code{"deterministic"} (exact convex hull; \code{"exact"}
+is accepted as an alias) or \code{"hyper_normal"} (fast ellipsoid
+approximation). If missing, chosen from \code{dim_threshold}.}
 
-\item{compressed_angle}{how much the original hypervolume is changed by the similarity matrix}
+\item{compressed_angle}{Multiplicative factor \eqn{\Omega(S)^{1/d}}
+accounting for species similarity or functional complementarity, usually
+obtained from \code{\link[=get_compressed_angle]{get_compressed_angle()}}. The default \code{1} corresponds to
+totally dissimilar species (identity similarity matrix).}
 
-\item{dim_threshold}{the threshold of which default hypervolume_method is used}
+\item{dim_threshold}{When \code{hypervolume_method} is missing, the exact method
+is used if the embedding dimension is at most \code{dim_threshold} and the
+hyper-normal approximation otherwise. Default 10.}
 
-\item{sparsity}{whether the meta_composition is encoded as a sparse matrix}
+\item{sparsity}{Logical. Is \code{meta_composition} a sparse matrix? Detected
+automatically; kept for backward compatibility.}
+
+\item{weight_scheme}{Either \code{"paper"} (default, Eq. 5 of Song et al. 2025) or
+\code{"legacy"} (weights used by BetaVolume <= 0.1.0). Only used when
+\code{weights = TRUE}.}
 }
 \value{
-the value of the geometric measure of beta_diversity
+A single non-negative number: the geometric beta diversity.
 }
 \description{
-This function loads a file as a matrix.
-It assumes that columns correspond to local communities (plots or patches)
-while the columns correspond to species.
-The matrix entries correspond to species property (e.g, presence/absence).
+Computes the geometric beta diversity \eqn{\beta_{vol}} of Song et al.
+(2025). The metacommunity matrix is embedded as a cloud of points (one point
+per community or per species, whichever is more numerous) in a
+\eqn{d}-dimensional space, \eqn{d = \min(\gamma, N)}{d = min(gamma, N)}, where \eqn{\gamma} is
+the number of species and \eqn{N} the number of communities. Together with
+the origin, the points span a convex polytope \eqn{P} and
+\deqn{\beta_{vol} = d \times \mathrm{vol}(P)^{1/d}.}{beta_vol = d * vol(P)^(1/d).}
+\eqn{\beta_{vol}} is an effective number of communities ranging from 0 (all
+communities identical) to \eqn{d} (for presence/absence data: all
+\eqn{2^d - 1} possible non-empty compositions are present). Unlike classic
+measures, adding a distinct, species-rich community never decreases beta
+diversity.
+}
+\details{
+\strong{Orientation.} The function is agnostic to whether communities are in rows
+or columns: the matrix is transposed when necessary so that the smaller
+dimension defines the axes (see \code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}}).
+
+\strong{Why the origin?} An empty community (or a "ghost" species absent from
+every community) must not change beta diversity (double-zero asymmetry), so
+the origin is always part of the embedded object.
+
+\strong{Estimation methods} (\code{hypervolume_method}):
+\describe{
+\item{\code{"deterministic"} (alias \code{"exact"})}{The exact volume of the convex
+hull, computed with Qhull through \code{\link[geometry:convhulln]{geometry::convhulln()}}. Computing
+convex hulls is exponential in \eqn{d} and is only practical up to
+about 15 dimensions.}
+\item{\code{"hyper_normal"}}{A fast approximation based on the ellipsoid
+spanned by the covariance matrix \eqn{\Sigma} of the embedded points
+(including the origin):
+\deqn{\beta \approx 4\, d\, \det(\Sigma)^{1/d}.}{beta ~ 4 d det(Sigma)^(1/d).}
+This is the variance-based geometric measure \eqn{\beta_{VAR}} (Box 1 of
+the paper) multiplied by \eqn{4 = 1/\mathrm{Var}(\mathrm{Bernoulli}(1/2))}{4 = 1/Var(Bernoulli(1/2))},
+which puts it on the same scale as \eqn{\beta_{vol}}: a
+presence/absence metacommunity containing every possible composition
+has covariance \eqn{\approx I/4}{~ I/4} and hence \eqn{\beta \approx d}{beta ~ d}. It
+scales to thousands of dimensions, accepts sparse matrices, and is
+the method used for large metacommunities in the paper. Note that,
+like a variance, it scales with the square of the data
+(\eqn{\beta(cZ) = c^2 \beta(Z)}) whereas \eqn{\beta_{vol}} scales
+linearly, so values from the two methods should not be mixed when
+comparing metacommunities with non-binary data.}
+}
+By default the exact method is used when \eqn{d \le}{d <=} \code{dim_threshold} (10)
+and the hyper-normal approximation otherwise.
+
+\strong{Species similarity and functional complementarity.} Species similarity
+(Leinster & Cobbold 2012) acts as a linear transformation of the axes that
+rescales the hypervolume by the normalised solid angle \eqn{\Omega(S)}
+(Eq. 9 of the paper):
+\eqn{\beta_{vol} = d\,(\Omega(S)\,\mathrm{vol}(P))^{1/d}}{beta_vol = d (Omega(S) vol(P))^(1/d)}. Pass
+\code{compressed_angle = get_compressed_angle(S)} to apply it; see
+\code{\link[=get_compressed_angle]{get_compressed_angle()}}.
+
+\strong{Presence/absence duplicates.} Set \code{weights = TRUE} to use the weighted
+embedding of duplicated compositions (Eq. 5 of the paper); see
+\code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}}.
+}
+\examples{
+# Fig. 1 of Song et al. (2025): two species A and B
+meta_I <- rbind(c(1, 0), c(0, 1)) # {A}, {B}
+meta_II <- rbind(c(1, 0), c(0, 1), c(1, 1)) # {A}, {B}, {A, B}
+betavolume(meta_I) # 2 * sqrt(1/2) = 1.41
+betavolume(meta_II) # 2 * sqrt(1) = 2, the maximum for two species
+
+# An empirical metacommunity (37 species x 10 plots)
+betavolume(example_meta_composition)
+betavolume(example_meta_composition, weights = TRUE)
+
+# Fast approximation for high-dimensional data
+betavolume(example_meta_composition, hypervolume_method = "hyper_normal")
+
+# Sparse matrices are supported
+sparse <- Matrix::Matrix(example_meta_composition, sparse = TRUE)
+betavolume(sparse, hypervolume_method = "hyper_normal")
+}
+\references{
+Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., &
+Gonzalez, A. (2025). A geometric approach to beta diversity. \emph{Ecological
+Monographs}, 95(1), e70008. \doi{10.1002/ecm.70008}
+
+Leinster, T., & Cobbold, C. A. (2012). Measuring diversity: the importance
+of species similarity. \emph{Ecology}, 93(3), 477-489. \doi{10.1890/10-2402.1}
+}
+\seealso{
+\code{\link[=preprocess_meta_composition]{preprocess_meta_composition()}}, \code{\link[=disentangle_individual_contribution]{disentangle_individual_contribution()}},
+\code{\link[=get_compressed_angle]{get_compressed_angle()}}, \code{\link[=beta_temporal_overlap]{beta_temporal_overlap()}}
 }

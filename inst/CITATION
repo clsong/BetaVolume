@@ -1,0 +1,23 @@
+bibentry(
+  bibtype = "Article",
+  title = "A geometric approach to beta diversity",
+  author = c(
+    person("Chuliang", "Song"),
+    person("Muyang", "Lu"),
+    person(c("Joseph", "R."), "Bennett"),
+    person("Benjamin", "Gilbert"),
+    person("Marie-Josée", "Fortin"),
+    person("Andrew", "Gonzalez")
+  ),
+  journal = "Ecological Monographs",
+  year = "2025",
+  volume = "95",
+  number = "1",
+  pages = "e70008",
+  doi = "10.1002/ecm.70008",
+  textVersion = paste(
+    "Song, C., Lu, M., Bennett, J. R., Gilbert, B., Fortin, M.-J., & Gonzalez, A. (2025).",
+    "A geometric approach to beta diversity. Ecological Monographs, 95(1), e70008.",
+    "https://doi.org/10.1002/ecm.70008"
+  )
+)
