@@ -222,10 +222,11 @@ exact_loo_loss <- function(points, cores = 1L) {
 #' @noRd
 hyper_normal_loo_loss <- function(points, group = seq_len(nrow(points))) {
   d <- ncol(points)
-  n <- nrow(points) + 1L # + origin
+  # Doubles, not integers: n * n_k overflows integer arithmetic beyond 2^31.
+  n <- as.double(nrow(points) + 1L) # + origin
   n_units <- max(group)
   first <- match(seq_len(n_units), group)
-  n_k <- tabulate(group, nbins = n_units)
+  n_k <- as.double(tabulate(group, nbins = n_units))
 
   cov <- embedding_covariance(points)
   ld <- logdet_psd(cov)
