@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# BetaVolume <img src="man/figures/logo_2.png" align="right" height="137" />
+# BetaVolume <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/clsong/BetaVolume/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/clsong/BetaVolume/actions/workflows/R-CMD-check.yaml)

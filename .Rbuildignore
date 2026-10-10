@@ -5,7 +5,7 @@
 ^\.github$
 ^julia$
 ^benchmarks$
-^man/figures/logo\.pdf$
+^tools$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$

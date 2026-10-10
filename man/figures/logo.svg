@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="518" height="600" viewBox="0 0 518 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14523f"/>
+      <stop offset="1" stop-color="#0a2a22"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#4fe0a0" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#4fe0a0" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clip"><polygon points="259.0,8.0 511.9,154.0 511.9,446.0 259.0,592.0 6.1,446.0 6.1,154.0"/></clipPath>
+  </defs>
+  <polygon points="259.0,8.0 511.9,154.0 511.9,446.0 259.0,592.0 6.1,446.0 6.1,154.0" fill="url(#bg)"/>
+  <g clip-path="url(#clip)">
+    <circle cx="259.0" cy="280.0" r="230" fill="url(#glow)"/>
+    <polygon points="272.8,421.3 153.5,370.8 257.2,312.7 376.5,363.2" fill="none" stroke="#e9fff3" stroke-opacity="0.25" stroke-width="1.6" stroke-dasharray="5 6"/><polygon points="257.2,312.7 153.5,370.8 153.5,232.8 257.2,174.7" fill="none" stroke="#e9fff3" stroke-opacity="0.25" stroke-width="1.6" stroke-dasharray="5 6"/><polygon points="376.5,363.2 257.2,312.7 257.2,174.7 376.5,225.2" fill="none" stroke="#e9fff3" stroke-opacity="0.25" stroke-width="1.6" stroke-dasharray="5 6"/>
+    <polygon points="153.5,232.8 153.5,370.8 272.8,421.3" fill="#1f8a70" fill-opacity="0.92" stroke="#e9fff3" stroke-width="2.4" stroke-linejoin="round"/><polygon points="153.5,232.8 272.8,421.3 376.5,225.2" fill="#c7f5dd" fill-opacity="0.92" stroke="#e9fff3" stroke-width="2.4" stroke-linejoin="round"/><polygon points="376.5,225.2 272.8,421.3 376.5,363.2" fill="#3fb98a" fill-opacity="0.92" stroke="#e9fff3" stroke-width="2.4" stroke-linejoin="round"/><polygon points="257.2,174.7 153.5,232.8 376.5,225.2" fill="#9be7b8" fill-opacity="0.92" stroke="#e9fff3" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="272.8" cy="421.3" r="13" fill="#0b2e24" fill-opacity="0.35"/><circle cx="272.8" cy="421.3" r="10" fill="#5ec8ff" stroke="#ffffff" stroke-width="2.5"/><circle cx="257.2" cy="312.7" r="6.5" fill="#5ec8ff" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1.5"/><circle cx="153.5" cy="232.8" r="13" fill="#0b2e24" fill-opacity="0.35"/><circle cx="153.5" cy="232.8" r="10" fill="#5ec8ff" stroke="#ffffff" stroke-width="2.5"/><circle cx="376.5" cy="363.2" r="13" fill="#0b2e24" fill-opacity="0.35"/><circle cx="376.5" cy="363.2" r="10" fill="#5ec8ff" stroke="#ffffff" stroke-width="2.5"/><circle cx="257.2" cy="174.7" r="13" fill="#0b2e24" fill-opacity="0.35"/><circle cx="257.2" cy="174.7" r="10" fill="#5ec8ff" stroke="#ffffff" stroke-width="2.5"/><circle cx="376.5" cy="225.2" r="13" fill="#0b2e24" fill-opacity="0.35"/><circle cx="376.5" cy="225.2" r="10" fill="#5ec8ff" stroke="#ffffff" stroke-width="2.5"/><circle cx="153.5" cy="370.8" r="11" fill="#ff5a5f" stroke="#ffffff" stroke-width="2.5"/>
+    <text x="259.0" y="102.0" font-family="DejaVu Serif" font-size="46" font-style="italic"
+          fill="#ffd36e" text-anchor="middle">&#946;<tspan font-size="22" dy="9">vol</tspan></text>
+    <text x="259.0" y="496.0" font-family="DejaVu Sans" font-weight="bold" font-size="44"
+          fill="#ffffff" text-anchor="middle" letter-spacing="0.5">BetaVolume</text>
+  </g>
+  <polygon points="259.0,24.0 498.0,162.0 498.0,438.0 259.0,576.0 20.0,438.0 20.0,162.0" fill="none" stroke="#9be7b8" stroke-opacity="0.35" stroke-width="2"/>
+  <polygon points="259.0,8.0 511.9,154.0 511.9,446.0 259.0,592.0 6.1,446.0 6.1,154.0" fill="none" stroke="#9be7b8" stroke-width="14" stroke-linejoin="round"/>
+</svg>
