@@ -12,8 +12,17 @@
 #' presence/absence data with many coplanar points `"Tv"` can abort with an
 #' internal "qh_checkpolygon" error even though the hull itself is fine. The
 #' legacy implementation caught such errors and silently returned 0.
+#'
+#' `"Q0"` turns off Qhull's pre-merging of nearly coplanar facets (in 5-d and
+#' higher Qhull otherwise adds `"Qx"`, exact pre-merges). Presence/absence
+#' points have many coplanar facets, and pre-merging them dominates the run
+#' time; without it hulls are about four times faster and their volumes agree
+#' with the default options to about 1e-13. If Qhull reports an error with
+#' `"Q0"`, the hull is recomputed with the default options
+#' (`qhull_fallback_options`).
 #' @noRd
-qhull_options <- "Qt"
+qhull_options <- "Qt Q0"
+qhull_fallback_options <- "Qt"
 
 #' Prepare a point cloud for Qhull: densify, add the origin, drop duplicates.
 #' @noRd
@@ -62,16 +71,21 @@ qhull <- function(points) {
   run <- function(options) {
     geometry::convhulln(points, options = options, output.options = "FA")
   }
-  tryCatch(run(qhull_options), error = function(e) {
+  on_error <- function(e) {
     msg <- conditionMessage(e)
     if (grepl("QH6154|QH6013|flat|less than|not enough points", msg)) {
       # Precision-level flat input: the volume is numerically zero.
       return(NULL)
     }
     # Retry once with joggled input before giving up loudly.
-    tryCatch(run(paste(qhull_options, "QJ")), error = function(e2) {
+    tryCatch(run(paste(qhull_fallback_options, "QJ")), error = function(e2) {
       stop("Qhull failed to compute the convex hull: ", msg, call. = FALSE)
     })
+  }
+  tryCatch(run(qhull_options), error = function(e) {
+    # Without pre-merging Qhull can stop on a precision error that the
+    # default options handle: retry with those first.
+    tryCatch(run(qhull_fallback_options), error = on_error)
   })
 }
 

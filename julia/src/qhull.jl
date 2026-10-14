@@ -11,12 +11,18 @@
 #   vertices / facet equations are extracted only when needed, with DirectQhull's own
 #   (internal) helpers.
 #
-# The options are those of the R package: "Qt" (triangulated output, no "Tv").
-# Qhull itself adds "Qx" (exact pre-merges) in 5-d and higher.
+# The options are those of the R package: "Qt Q0" (triangulated output, no "Tv", no
+# pre-merging), with "Qt" as the fallback. Qhull otherwise adds "Qx" (exact pre-merges) in
+# 5-d and higher; on presence/absence points, with their many coplanar facets, pre-merging
+# dominates the run time, and without it hulls are about four times faster with volumes
+# that agree to about 1e-13. If Qhull stops with "Q0", the hull is recomputed with "Qt".
+# Facet equations (used by `temporal_overlap`) are always computed with "Qt", whose
+# triangulation of coplanar facets can differ from that of "Qt Q0".
 
 const _DQ = DirectQhull
 const _QH_ERRFILE = Ref{Ptr{Cvoid}}(C_NULL)
-const _QH_OPTIONS = "Qt"
+const _QH_OPTIONS = "Qt Q0"
+const _QH_FALLBACK_OPTIONS = "Qt"
 
 function _init_qhull_errfile()
     try
@@ -94,13 +100,19 @@ function _hull(P::Matrix{Float64}; vertices::Bool = false, equations::Bool = fal
     if !_is_full_dimensional(P)
         return (volume = 0.0, vertices = Int[], equations = _EMPTY_EQ, degenerate = true)
     end
-    code, vol, verts, eqs = _qhull_run(P, _QH_OPTIONS, vertices, equations)
+    code = -1
+    if !equations
+        code, vol, verts, eqs = _qhull_run(P, _QH_OPTIONS, vertices, equations)
+    end
+    if code != 0
+        code, vol, verts, eqs = _qhull_run(P, _QH_FALLBACK_OPTIONS, vertices, equations)
+    end
     if code == 1 || code == 2
         # input / singular error: precision-level flat input, zero volume (as in R)
         return (volume = 0.0, vertices = Int[], equations = _EMPTY_EQ, degenerate = true)
     elseif code != 0
         # precision or topology error: retry once with joggled input (as in R)
-        code2, vol, verts, eqs = _qhull_run(P, _QH_OPTIONS * " QJ", vertices, equations)
+        code2, vol, verts, eqs = _qhull_run(P, _QH_FALLBACK_OPTIONS * " QJ", vertices, equations)
         code2 == 0 || error("Qhull failed to compute the convex hull (exit code $code).")
     end
     return (volume = vol, vertices = verts, equations = eqs, degenerate = false)

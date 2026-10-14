@@ -615,6 +615,22 @@ end
         @test h.vertices == sort(Int.(ref.vertices))
         @test h.equations == ref.equations
     end
+    # hulls without pre-merging ("Qt Q0", volume and vertices) agree with "Qt"; they may list
+    # different non-extreme (coplanar) points, but never a different extreme point
+    rng = MersenneTwister(17)
+    for i in 1:40
+        d = rand(rng, 3:8)
+        X = Float64.(rand(rng, 40, d) .< 0.2 + 0.4rand(rng))
+        i % 4 == 0 && (X .*= randexp(rng, 40, d))
+        P = BV._hull_points(X)
+        BV._is_full_dimensional(P) || continue
+        h = BV._hull(P; vertices = true)
+        _, v, vt, _ = BV._qhull_run(P, BV._QH_FALLBACK_OPTIONS, true, false)
+        @test h.volume ≈ v rtol = 1e-10
+        for k in symdiff(h.vertices, vt)
+            @test BV._hull(P[:, setdiff(1:size(P, 2), k)]).volume ≈ v rtol = 1e-10
+        end
+    end
     # dqrdc2-style rank
     @test BV._qr_rank!([1.0 2; 2 4; 3 6], 1e-10) == 1
     @test BV._qr_rank!([1.0 0; 0 1; 1 1], 1e-10) == 2

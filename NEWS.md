@@ -1,3 +1,19 @@
+# BetaVolume (development version)
+
+## Performance
+
+* Exact convex hulls are computed without Qhull's pre-merging of coplanar
+  facets (options `"Qt Q0"`; `"Qt"` is kept as the fallback if Qhull reports
+  an error, and for the facet equations used by `temporal_overlap()` in
+  Julia). Presence/absence points have many coplanar facets, and pre-merging
+  them dominated the run time: exact `disentangle_individual_contribution()`
+  is about 4 times faster in R and 5-9 times faster in Julia. Results are
+  unchanged: beta diversity agrees with the previous options to within 4e-14
+  (relative) and contributions to within 5e-10 on random presence/absence,
+  weighted and abundance data of 3-9 dimensions. The two option sets can list
+  different non-extreme (coplanar) points among the facet vertices, which
+  does not affect any result.
+
 # BetaVolume 0.2.0
 
 This release aligns the package with the published method (Song et al. 2025,
