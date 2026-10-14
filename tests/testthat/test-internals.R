@@ -8,6 +8,29 @@ test_that("hull volumes of standard polytopes", {
   expect_equal(hull_volume(matrix(c(-1, 2), ncol = 1)), 3) # 1-d interval
 })
 
+test_that("hulls without pre-merging (Q0) match the default Qhull options", {
+  set.seed(17)
+  vol <- function(p, options) geometry::convhulln(p, options = options, output.options = "FA")$vol
+  for (i in 1:40) {
+    d <- sample(3:8, 1)
+    x <- matrix(rbinom(40 * d, 1, runif(1, 0.2, 0.6)), 40, d)
+    if (i %% 4 == 0) x <- x * rexp(length(x)) # abundance-like points
+    p <- BetaVolume:::hull_points(x)
+    if (!BetaVolume:::is_full_dimensional(p)) next
+    h <- BetaVolume:::qhull(p)
+    v <- vol(p, BetaVolume:::qhull_fallback_options)
+    expect_equal(h$vol, v, tolerance = 1e-10)
+    # The two option sets may list different non-extreme (coplanar) points among
+    # the facet vertices, but never a different extreme point: removing any
+    # point listed by only one of them leaves the volume unchanged.
+    a <- unique(as.vector(h$hull))
+    b <- unique(as.vector(geometry::convhulln(p, options = BetaVolume:::qhull_fallback_options)))
+    for (k in union(setdiff(a, b), setdiff(b, a))) {
+      expect_equal(vol(p[-k, , drop = FALSE], BetaVolume:::qhull_fallback_options), v, tolerance = 1e-10)
+    }
+  }
+})
+
 test_that("flat point clouds have zero volume", {
   hull_volume <- BetaVolume:::hull_volume
   expect_equal(hull_volume(rbind(c(1, 0, 0), c(0, 1, 0), c(1, 1, 0))), 0)
